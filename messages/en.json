@@ -91,6 +91,7 @@
     "you": "(you)",
     "inactive": "Inactive",
     "teamMembers": "Team members",
+    "cancel": "Cancel",
     "ok": {
       "created": "User created.",
       "updated": "User updated. They must sign in again.",
