@@ -1,21 +1,19 @@
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
-import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { Header } from "@/components/Header";
 import { LEAD_STATUSES } from "@/domain/lead-status";
+import { requireUser } from "@/lib/auth";
 
-export default function Home() {
-  const t = useTranslations("Home");
-  const tc = useTranslations("Common");
-  const ts = useTranslations("LeadStatus");
+export default async function Home() {
+  const user = await requireUser();
+  const t = await getTranslations("Home");
+  const ts = await getTranslations("LeadStatus");
 
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-8">
-      <header className="mb-8 flex items-center justify-between gap-4">
-        <span className="font-semibold">{tc("appName")}</span>
-        <LanguageSwitcher />
-      </header>
+      <Header />
 
-      <h1 className="text-2xl font-bold">{t("title")}</h1>
+      <h1 className="text-2xl font-bold">{t("welcome", { name: user.name })}</h1>
       <p className="mt-2 opacity-80">{t("subtitle")}</p>
 
       <h2 className="mt-8 text-lg font-semibold">{t("statusesTitle")}</h2>

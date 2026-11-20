@@ -5,17 +5,19 @@
   },
   "Common": {
     "appName": "OMO System",
-    "help": "Help"
+    "help": "Help",
+    "users": "Users",
+    "signOut": "Sign out"
   },
   "LanguageSwitcher": {
     "label": "Language"
   },
   "Home": {
-    "title": "Foundation ready",
-    "subtitle": "The bilingual setup (English and Traditional Chinese) is in place. Lead screens come next.",
+    "subtitle": "Lead screens come next.",
     "statusesTitle": "Lead statuses",
     "statusesNote": "The database stores a code; the label shown comes from this dictionary.",
-    "helpLink": "Read the guides"
+    "helpLink": "Read the guides",
+    "welcome": "Welcome, {name}"
   },
   "Help": {
     "title": "Guides",
@@ -43,5 +45,52 @@
     "closed_not_converting": "Closed: not converting",
     "closed_conflict": "Closed: duplicate lead",
     "won": "Won"
+  },
+  "Auth": {
+    "loginTitle": "Sign in",
+    "setupTitle": "Create the first admin",
+    "setupIntro": "No users exist yet. This account will be the administrator.",
+    "email": "Email",
+    "name": "Name",
+    "password": "Password",
+    "passwordHint": "At least 10 characters",
+    "signIn": "Sign in",
+    "createAdmin": "Create admin"
+  },
+  "Roles": {
+    "admin": "Admin",
+    "sales": "Sales",
+    "assistant": "Sales assistant"
+  },
+  "Users": {
+    "title": "Users",
+    "add": "Add user",
+    "addButton": "Add user",
+    "name": "Name",
+    "email": "Email",
+    "passwordMin": "Password (10+ characters)",
+    "role": "Role",
+    "active": "Active",
+    "save": "Save",
+    "newPassword": "New password",
+    "resetPassword": "Reset password",
+    "you": "(you)",
+    "ok": {
+      "created": "User created.",
+      "updated": "User updated. They must sign in again.",
+      "passwordReset": "Password reset. They must sign in again."
+    }
+  },
+  "Errors": {
+    "invalid": "Email or password is incorrect.",
+    "locked": "Too many failed attempts. Try again in 15 minutes.",
+    "email": "Enter a valid email address.",
+    "name": "Enter a name.",
+    "passwordShort": "Password must be 10 to 200 characters.",
+    "emailTaken": "That email is already in use.",
+    "lastAdmin": "There must be at least one active admin.",
+    "self": "You can't disable or demote your own account.",
+    "notFound": "User not found.",
+    "generic": "Something went wrong. Please try again."
   }
 }

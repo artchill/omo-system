@@ -1,4 +1,5 @@
 import { cookies, headers } from "next/headers";
+import { getCurrentUser } from "@/lib/auth";
 import { getRequestConfig } from "next-intl/server";
 import en from "../../messages/en.json";
 import zhHant from "../../messages/zh-Hant.json";
@@ -32,12 +33,15 @@ function withEnglishFallback(base: Json, override: Json): Json {
 
 /**
  * Locale priority:
- *  1. (later, once login exists) the signed-in user's saved preference
+ *  1. the signed-in user's saved preference
  *  2. the NEXT_LOCALE cookie set by the language switcher
  *  3. the browser's Accept-Language header
  *  4. defaultLocale (zh-Hant)
  */
 async function resolveLocale(): Promise<Locale> {
+  const user = await getCurrentUser();
+  if (user && isLocale(user.locale)) return user.locale;
+
   const cookieValue = (await cookies()).get(LOCALE_COOKIE)?.value;
   if (isLocale(cookieValue)) return cookieValue;
 

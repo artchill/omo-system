@@ -3,11 +3,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { Header } from "@/components/Header";
 import type { Locale } from "@/i18n/config";
+import { requireUser } from "@/lib/auth";
 import { getDoc } from "@/lib/docs";
 
 export default async function HelpDoc({ params }: PageProps<"/help/[slug]">) {
+  await requireUser();
   const { slug } = await params;
   const locale = (await getLocale()) as Locale;
   const doc = getDoc(locale, slug);
@@ -17,12 +19,12 @@ export default async function HelpDoc({ params }: PageProps<"/help/[slug]">) {
 
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-8">
-      <header className="mb-8 flex items-center justify-between gap-4">
+      <Header />
+      <p className="mb-4">
         <Link href="/help" className="underline">
           ← {t("back")}
         </Link>
-        <LanguageSwitcher />
-      </header>
+      </p>
 
       {doc.fellBack && (
         <p className="mb-4 rounded-md border border-foreground/20 p-3 text-sm">

@@ -5,17 +5,19 @@
   },
   "Common": {
     "appName": "OMO 系統",
-    "help": "說明"
+    "help": "說明",
+    "users": "使用者",
+    "signOut": "登出"
   },
   "LanguageSwitcher": {
     "label": "語言"
   },
   "Home": {
-    "title": "基礎架構已就緒",
-    "subtitle": "中英雙語架構（英文與繁體中文）已建立，名單畫面將在下一步開發。",
+    "subtitle": "名單畫面將在下一步開發。",
     "statusesTitle": "名單狀態",
     "statusesNote": "資料庫儲存的是代碼，畫面上顯示的文字來自此字典。",
-    "helpLink": "閱讀使用說明"
+    "helpLink": "閱讀使用說明",
+    "welcome": "歡迎，{name}"
   },
   "Help": {
     "title": "使用說明",
@@ -43,5 +45,52 @@
     "closed_not_converting": "Close(賣不動)",
     "closed_conflict": "Close(撞單)",
     "won": "Won(名單成交)"
+  },
+  "Auth": {
+    "loginTitle": "登入",
+    "setupTitle": "建立第一位管理員",
+    "setupIntro": "目前尚無任何使用者，此帳號將成為管理員。",
+    "email": "電子郵件",
+    "name": "姓名",
+    "password": "密碼",
+    "passwordHint": "至少 10 個字元",
+    "signIn": "登入",
+    "createAdmin": "建立管理員"
+  },
+  "Roles": {
+    "admin": "管理員",
+    "sales": "業務",
+    "assistant": "業務助理"
+  },
+  "Users": {
+    "title": "使用者",
+    "add": "新增使用者",
+    "addButton": "新增使用者",
+    "name": "姓名",
+    "email": "電子郵件",
+    "passwordMin": "密碼（至少 10 個字元）",
+    "role": "角色",
+    "active": "啟用",
+    "save": "儲存",
+    "newPassword": "新密碼",
+    "resetPassword": "重設密碼",
+    "you": "（您）",
+    "ok": {
+      "created": "已建立使用者。",
+      "updated": "已更新使用者，對方需要重新登入。",
+      "passwordReset": "已重設密碼，對方需要重新登入。"
+    }
+  },
+  "Errors": {
+    "invalid": "電子郵件或密碼不正確。",
+    "locked": "失敗次數過多，請 15 分鐘後再試。",
+    "email": "請輸入有效的電子郵件。",
+    "name": "請輸入姓名。",
+    "passwordShort": "密碼長度須為 10 至 200 個字元。",
+    "emailTaken": "此電子郵件已被使用。",
+    "lastAdmin": "至少要保留一位啟用中的管理員。",
+    "self": "您無法停用或降級自己的帳號。",
+    "notFound": "找不到此使用者。",
+    "generic": "發生錯誤，請再試一次。"
   }
 }

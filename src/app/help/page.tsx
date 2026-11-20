@@ -1,23 +1,19 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import Link from "next/link";
-import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { Header } from "@/components/Header";
 import type { Locale } from "@/i18n/config";
+import { requireUser } from "@/lib/auth";
 import { listDocs } from "@/lib/docs";
 
 export default async function HelpIndex() {
+  await requireUser();
   const locale = (await getLocale()) as Locale;
   const t = await getTranslations("Help");
-  const tc = await getTranslations("Common");
   const docs = listDocs(locale);
 
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-8">
-      <header className="mb-8 flex items-center justify-between gap-4">
-        <Link href="/" className="font-semibold">
-          {tc("appName")}
-        </Link>
-        <LanguageSwitcher />
-      </header>
+      <Header />
 
       <h1 className="text-2xl font-bold">{t("title")}</h1>
       <p className="mt-2 opacity-80">{t("intro")}</p>
