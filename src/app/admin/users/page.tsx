@@ -199,18 +199,18 @@ export default async function UsersPage({
               <button type="submit" className="btn btn-ghost text-xs">
                 {t("save")}
               </button>
-              <ResetPasswordModal
-                userId={u.id}
-                userName={u.name}
-                labels={{
-                  trigger: t("resetPassword"),
-                  title: t("resetPassword"),
-                  password: t("passwordMin"),
-                  submit: t("resetPassword"),
-                  cancel: t("cancel"),
-                }}
-              />
             </form>
+            <ResetPasswordModal
+              userId={u.id}
+              userName={u.name}
+              labels={{
+                trigger: t("resetPassword"),
+                title: t("resetPassword"),
+                password: t("passwordMin"),
+                submit: t("resetPassword"),
+                cancel: t("cancel"),
+              }}
+            />
           </div>
         ))}
       </div>
