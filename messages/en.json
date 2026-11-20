@@ -89,6 +89,8 @@
     "newPassword": "New password",
     "resetPassword": "Reset password",
     "you": "(you)",
+    "inactive": "Inactive",
+    "teamMembers": "Team members",
     "ok": {
       "created": "User created.",
       "updated": "User updated. They must sign in again.",
