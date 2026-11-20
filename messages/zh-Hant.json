@@ -16,8 +16,21 @@
     "subtitle": "名單畫面將在下一步開發。",
     "statusesTitle": "名單狀態",
     "statusesNote": "資料庫儲存的是代碼，畫面上顯示的文字來自此字典。",
-    "helpLink": "閱讀使用說明",
-    "welcome": "歡迎，{name}"
+    "welcome": "歡迎，{name}",
+    "kpiTitle": "關鍵數字",
+    "kpiNew": "新進名單",
+    "kpiValid": "有效名單",
+    "kpiConsult": "諮詢數",
+    "kpiWon": "成交數",
+    "kpiWait": "新增名單後即會顯示",
+    "teamTitle": "團隊",
+    "teamNote": "{count} 位啟用中的成員",
+    "group": {
+      "open": "進行中",
+      "paused": "暫緩",
+      "closed": "已結案",
+      "won": "已成交"
+    }
   },
   "Help": {
     "title": "使用說明",
@@ -55,7 +68,8 @@
     "password": "密碼",
     "passwordHint": "至少 10 個字元",
     "signIn": "登入",
-    "createAdmin": "建立管理員"
+    "createAdmin": "建立管理員",
+    "loginIntro": "請使用團隊帳號繼續。"
   },
   "Roles": {
     "admin": "管理員",
@@ -79,7 +93,8 @@
       "created": "已建立使用者。",
       "updated": "已更新使用者，對方需要重新登入。",
       "passwordReset": "已重設密碼，對方需要重新登入。"
-    }
+    },
+    "subtitle": "團隊共 {count} 位成員"
   },
   "Errors": {
     "invalid": "電子郵件或密碼不正確。",
@@ -92,5 +107,12 @@
     "self": "您無法停用或降級自己的帳號。",
     "notFound": "找不到此使用者。",
     "generic": "發生錯誤，請再試一次。"
+  },
+  "Nav": {
+    "dashboard": "儀表板",
+    "leads": "名單",
+    "soon": "即將推出",
+    "help": "使用說明",
+    "users": "使用者"
   }
 }

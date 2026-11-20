@@ -21,3 +21,13 @@ export const LEAD_STATUSES = [
 ] as const;
 
 export type LeadStatus = (typeof LEAD_STATUSES)[number];
+
+export type LeadStatusGroup = "open" | "paused" | "closed" | "won";
+
+/** Which column of the pipeline a status belongs to (used for colours and counts). */
+export function statusGroup(status: LeadStatus): LeadStatusGroup {
+  if (status === "won") return "won";
+  if (status === "on_hold") return "paused";
+  if (status.startsWith("closed_")) return "closed";
+  return "open";
+}

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Header } from "@/components/Header";
+import { Shell } from "@/components/Header";
 import type { Locale } from "@/i18n/config";
 import { requireUser } from "@/lib/auth";
 import { getDoc } from "@/lib/docs";
@@ -18,27 +18,23 @@ export default async function HelpDoc({ params }: PageProps<"/help/[slug]">) {
   const t = await getTranslations("Help");
 
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-8">
-      <Header />
+    <Shell narrow>
       <p className="mb-4">
-        <Link href="/help" className="underline">
+        <Link href="/help" className="text-sm text-muted hover:text-foreground">
           ← {t("back")}
         </Link>
       </p>
 
       {doc.fellBack && (
-        <p className="mb-4 rounded-md border border-foreground/20 p-3 text-sm">
+        <p className="mb-4 rounded-xl border border-warn/40 bg-warn/10 px-4 py-3 text-sm text-warn">
           {t("notTranslated")}
         </p>
       )}
 
       {/* Raw HTML in markdown is NOT rendered (react-markdown default). */}
-      <article
-        lang={doc.fellBack ? "en" : locale}
-        className="space-y-3 [&_h1]:text-2xl [&_h1]:font-bold [&_h2]:mt-6 [&_h2]:text-lg [&_h2]:font-semibold [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_table]:border-collapse [&_td]:border [&_td]:border-foreground/20 [&_td]:px-2 [&_th]:border [&_th]:border-foreground/20 [&_th]:px-2 [&_a]:underline"
-      >
+      <article lang={doc.fellBack ? "en" : locale} className="glass prose-omo p-7">
         <ReactMarkdown remarkPlugins={[remarkGfm]}>{doc.body}</ReactMarkdown>
       </article>
-    </main>
+    </Shell>
   );
 }

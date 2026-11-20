@@ -16,8 +16,21 @@
     "subtitle": "Lead screens come next.",
     "statusesTitle": "Lead statuses",
     "statusesNote": "The database stores a code; the label shown comes from this dictionary.",
-    "helpLink": "Read the guides",
-    "welcome": "Welcome, {name}"
+    "welcome": "Welcome, {name}",
+    "kpiTitle": "Key numbers",
+    "kpiNew": "New leads",
+    "kpiValid": "Valid leads",
+    "kpiConsult": "Consultations",
+    "kpiWon": "Won deals",
+    "kpiWait": "Shows once leads are added",
+    "teamTitle": "Team",
+    "teamNote": "{count} active members",
+    "group": {
+      "open": "In progress",
+      "paused": "On hold",
+      "closed": "Closed",
+      "won": "Won"
+    }
   },
   "Help": {
     "title": "Guides",
@@ -55,7 +68,8 @@
     "password": "Password",
     "passwordHint": "At least 10 characters",
     "signIn": "Sign in",
-    "createAdmin": "Create admin"
+    "createAdmin": "Create admin",
+    "loginIntro": "Use your team account to continue."
   },
   "Roles": {
     "admin": "Admin",
@@ -79,7 +93,8 @@
       "created": "User created.",
       "updated": "User updated. They must sign in again.",
       "passwordReset": "Password reset. They must sign in again."
-    }
+    },
+    "subtitle": "{count, plural, one {# person} other {# people}} in your team"
   },
   "Errors": {
     "invalid": "Email or password is incorrect.",
@@ -92,5 +107,12 @@
     "self": "You can't disable or demote your own account.",
     "notFound": "User not found.",
     "generic": "Something went wrong. Please try again."
+  },
+  "Nav": {
+    "dashboard": "Dashboard",
+    "leads": "Leads",
+    "soon": "Soon",
+    "help": "Help",
+    "users": "Users"
   }
 }

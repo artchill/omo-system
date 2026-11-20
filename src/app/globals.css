@@ -1,26 +1,42 @@
 @import "tailwindcss";
 
+/*
+ * OMO design tokens. One dark theme: deep navy base, glass surfaces,
+ * a blue → cyan accent for actions, mint only for good news.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #060a14;
+  --foreground: #e8eefc;
+  --muted: #8a96b2;
+  --accent-from: #3b82f6;
+  --accent-to: #22d3ee;
+  --good: #34d399;
+  --warn: #fbbf24;
+  --bad: #fb7185;
+  --glass: rgba(255, 255, 255, 0.045);
+  --glass-strong: rgba(255, 255, 255, 0.075);
+  --edge: rgba(255, 255, 255, 0.09);
+  color-scheme: dark;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-good: var(--good);
+  --color-warn: var(--warn);
+  --color-bad: var(--bad);
+  --color-edge: var(--edge);
   --font-sans: system-ui, -apple-system, "Segoe UI", "PingFang TC",
     "Microsoft JhengHei", "Noto Sans TC", Roboto, Arial, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
-  background: var(--background);
+  background:
+    radial-gradient(60rem 40rem at 85% -10%, rgba(59, 130, 246, 0.16), transparent 60%),
+    radial-gradient(45rem 35rem at -5% 105%, rgba(34, 211, 238, 0.09), transparent 60%),
+    var(--background);
+  background-attachment: fixed;
   color: var(--foreground);
   font-family: var(--font-sans);
 }
@@ -28,4 +44,150 @@ body {
 /* Traditional Chinese reads better with a little more line height. */
 :lang(zh-Hant) {
   line-height: 1.7;
+}
+
+::selection {
+  background: rgba(59, 130, 246, 0.45);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent-to);
+  outline-offset: 2px;
+}
+
+@layer components {
+  /* Frosted card. The one surface used everywhere. */
+  .glass {
+    background: linear-gradient(145deg, var(--glass-strong), var(--glass));
+    border: 1px solid var(--edge);
+    border-radius: 1.25rem;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.06) inset,
+      0 24px 48px -24px rgba(0, 0, 0, 0.6);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 0.75rem;
+    padding: 0.55rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition:
+      transform 0.15s ease,
+      box-shadow 0.15s ease,
+      background-color 0.15s ease;
+    cursor: pointer;
+  }
+  .btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent-from), var(--accent-to));
+    color: #04101f;
+    box-shadow: 0 8px 24px -8px rgba(34, 211, 238, 0.55);
+  }
+  .btn-primary:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 28px -8px rgba(34, 211, 238, 0.7);
+  }
+  .btn-ghost {
+    background: var(--glass);
+    border: 1px solid var(--edge);
+    color: var(--foreground);
+  }
+  .btn-ghost:hover:not(:disabled) {
+    background: var(--glass-strong);
+  }
+
+  .field {
+    width: 100%;
+    border-radius: 0.75rem;
+    border: 1px solid var(--edge);
+    background: rgba(4, 8, 18, 0.55);
+    padding: 0.6rem 0.8rem;
+    font-size: 0.9rem;
+    color: var(--foreground);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .field::placeholder {
+    color: var(--muted);
+  }
+  .field:focus {
+    outline: none;
+    border-color: var(--accent-to);
+    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.18);
+  }
+  select.field option {
+    background: #0b1222;
+    color: var(--foreground);
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: 999px;
+    border: 1px solid var(--edge);
+    background: var(--glass);
+    padding: 0.3rem 0.8rem;
+    font-size: 0.8rem;
+  }
+
+  /* Rendered markdown (help guides) */
+  .prose-omo > * + * {
+    margin-top: 0.9rem;
+  }
+  .prose-omo h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .prose-omo h2 {
+    margin-top: 1.8rem;
+    font-size: 1.15rem;
+    font-weight: 650;
+  }
+  .prose-omo ul {
+    list-style: disc;
+    padding-left: 1.25rem;
+  }
+  .prose-omo ol {
+    list-style: decimal;
+    padding-left: 1.25rem;
+  }
+  .prose-omo a {
+    color: var(--accent-to);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .prose-omo table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+  .prose-omo th,
+  .prose-omo td {
+    border-bottom: 1px solid var(--edge);
+    padding: 0.55rem 0.75rem;
+    text-align: left;
+  }
+  .prose-omo th {
+    color: var(--muted);
+    font-weight: 600;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }

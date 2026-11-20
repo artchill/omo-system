@@ -17,7 +17,11 @@ export function LanguageSwitcher() {
   const [pending, startTransition] = useTransition();
 
   return (
-    <div role="group" aria-label={t("label")} className="inline-flex gap-1">
+    <div
+      role="group"
+      aria-label={t("label")}
+      className="inline-flex rounded-xl border border-edge bg-white/[0.04] p-1"
+    >
       {locales.map((code) => {
         const active = code === current;
         return (
@@ -28,10 +32,10 @@ export function LanguageSwitcher() {
             aria-pressed={active}
             disabled={pending || active}
             onClick={() => startTransition(() => void setLocale(code))}
-            className={`rounded-md px-3 py-1 text-sm ${
+            className={`rounded-lg px-3 py-1 text-xs font-medium transition-colors ${
               active
-                ? "bg-foreground text-background"
-                : "border border-foreground/20 hover:bg-foreground/10"
+                ? "bg-gradient-to-r from-blue-500 to-cyan-400 text-[#04101f]"
+                : "text-muted hover:text-foreground"
             }`}
           >
             {NATIVE_NAMES[code]}

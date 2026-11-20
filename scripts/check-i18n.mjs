@@ -48,7 +48,7 @@ for (const f of zhDocs) if (!enDocs.includes(f)) errors.push(`docs/en missing: $
 // Simplified forms. Only characters that differ are reported.
 // Characters that are valid Traditional too (OpenCC remaps them only in some
 // words), so they are never flagged on their own.
-const SHARED = new Set([..."了干后里面发系只云范采台复布向克出制准松折"]);
+const SHARED = new Set([..."了干后里面发系只云范采台复布向克出制准松折表钟"]);
 const toTwChars = OpenCC.Converter({ from: "cn", to: "tw" });
 function simplifiedIn(text) {
   const converted = toTwChars(text);
