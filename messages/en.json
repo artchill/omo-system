@@ -1,0 +1,47 @@
+{
+  "Metadata": {
+    "title": "OMO System",
+    "description": "Lead management for the OMO team"
+  },
+  "Common": {
+    "appName": "OMO System",
+    "help": "Help"
+  },
+  "LanguageSwitcher": {
+    "label": "Language"
+  },
+  "Home": {
+    "title": "Foundation ready",
+    "subtitle": "The bilingual setup (English and Traditional Chinese) is in place. Lead screens come next.",
+    "statusesTitle": "Lead statuses",
+    "statusesNote": "The database stores a code; the label shown comes from this dictionary.",
+    "helpLink": "Read the guides"
+  },
+  "Help": {
+    "title": "Guides",
+    "intro": "How to use the system.",
+    "back": "All guides",
+    "notTranslated": "This guide isn't available in your language yet. Showing the English version."
+  },
+  "NotFound": {
+    "title": "Page not found",
+    "body": "The page you are looking for doesn't exist.",
+    "home": "Back to home"
+  },
+  "LeadStatus": {
+    "pending_contact": "Pending contact",
+    "unreachable": "Unreachable",
+    "touched_follow_up": "Contacted, to follow up",
+    "touched_gone_quiet": "Contacted, gone quiet",
+    "consulted_gone_quiet": "Consulted, gone quiet",
+    "consulted_considering": "Consulted, considering",
+    "consulting": "In consultation",
+    "on_hold": "On hold",
+    "closed_invalid": "Closed: invalid lead",
+    "closed_unreachable": "Closed: unreachable",
+    "closed_not_interested": "Closed: not interested",
+    "closed_not_converting": "Closed: not converting",
+    "closed_conflict": "Closed: duplicate lead",
+    "won": "Won"
+  }
+}

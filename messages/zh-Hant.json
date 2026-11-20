@@ -1,0 +1,47 @@
+{
+  "Metadata": {
+    "title": "OMO 系統",
+    "description": "OMO 團隊的名單管理系統"
+  },
+  "Common": {
+    "appName": "OMO 系統",
+    "help": "說明"
+  },
+  "LanguageSwitcher": {
+    "label": "語言"
+  },
+  "Home": {
+    "title": "基礎架構已就緒",
+    "subtitle": "中英雙語架構（英文與繁體中文）已建立，名單畫面將在下一步開發。",
+    "statusesTitle": "名單狀態",
+    "statusesNote": "資料庫儲存的是代碼，畫面上顯示的文字來自此字典。",
+    "helpLink": "閱讀使用說明"
+  },
+  "Help": {
+    "title": "使用說明",
+    "intro": "系統的操作方式。",
+    "back": "所有說明",
+    "notTranslated": "此說明尚無繁體中文版本，目前顯示英文版。"
+  },
+  "NotFound": {
+    "title": "找不到頁面",
+    "body": "您要找的頁面不存在。",
+    "home": "回到首頁"
+  },
+  "LeadStatus": {
+    "pending_contact": "待聯繫",
+    "unreachable": "聯繫不上",
+    "touched_follow_up": "已接觸待追蹤",
+    "touched_gone_quiet": "接觸-待追蹤(消失)",
+    "consulted_gone_quiet": "諮詢-待追蹤(消失)",
+    "consulted_considering": "諮詢-待追蹤(考慮中)",
+    "consulting": "諮詢中",
+    "on_hold": "暫緩",
+    "closed_invalid": "Close(無效名單)",
+    "closed_unreachable": "Close(聯繫不上)",
+    "closed_not_interested": "Close(無意願)",
+    "closed_not_converting": "Close(賣不動)",
+    "closed_conflict": "Close(撞單)",
+    "won": "Won(名單成交)"
+  }
+}
