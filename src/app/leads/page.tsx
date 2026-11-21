@@ -164,9 +164,11 @@ export default async function LeadsPage({
       {/* Table */}
       <div className="glass overflow-hidden">
         {/* Desktop header */}
-        <div className="hidden border-b border-edge px-5 py-3 text-xs font-medium uppercase tracking-wider text-muted lg:grid lg:grid-cols-[minmax(0,2fr)_minmax(0,1.5fr)_minmax(0,1fr)_6rem_5rem_5rem_4rem]">
+        <div className="hidden border-b border-edge px-5 py-3 text-xs font-medium uppercase tracking-wider text-muted lg:grid lg:grid-cols-[minmax(0,2fr)_8rem_8rem_minmax(0,1.2fr)_minmax(0,1fr)_6rem_5rem_5rem_3rem]">
           <span>{t("name")}</span>
-          <span>{t("contactInfo")}</span>
+          <span>{t("phone")}</span>
+          <span>{t("lineId")}</span>
+          <span>{t("email")}</span>
           <span>{t("source")}</span>
           <span>{t("status")}</span>
           <span>{t("stages")}</span>
@@ -177,9 +179,9 @@ export default async function LeadsPage({
         {rows.map((lead) => (
           <div
             key={lead.id}
-            className="flex flex-wrap items-center gap-3 border-b border-edge px-5 py-3 transition-colors hover:bg-white/[0.03] lg:grid lg:grid-cols-[minmax(0,2fr)_minmax(0,1.5fr)_minmax(0,1fr)_6rem_5rem_5rem_4rem]"
+            className="flex flex-wrap items-center gap-3 border-b border-edge px-5 py-3 transition-colors hover:bg-white/[0.03] lg:grid lg:grid-cols-[minmax(0,2fr)_8rem_8rem_minmax(0,1.2fr)_minmax(0,1fr)_6rem_5rem_5rem_3rem]"
           >
-            {/* Name + assistant */}
+            {/* Name */}
             <div className="min-w-0 flex-1 lg:flex-none">
               <Link
                 href={`/leads/${lead.id}`}
@@ -187,17 +189,22 @@ export default async function LeadsPage({
               >
                 {lead.name}
               </Link>
-              {lead.assistant_name && (
-                <p className="text-xs text-muted truncate">{lead.assistant_name}</p>
-              )}
             </div>
 
-            {/* Contact info */}
-            <div className="min-w-0 text-xs text-muted space-y-0.5">
-              {lead.phone && <p className="truncate">{lead.phone}</p>}
-              {lead.line_id && <p className="truncate">LINE: {lead.line_id}</p>}
-              {lead.email && <p className="truncate">{lead.email}</p>}
-            </div>
+            {/* Contact Number */}
+            <span className="text-sm text-muted truncate">
+              {lead.phone || "—"}
+            </span>
+
+            {/* LINE */}
+            <span className="text-sm text-muted truncate">
+              {lead.line_id || "—"}
+            </span>
+
+            {/* Email */}
+            <span className="text-sm text-muted truncate">
+              {lead.email || "—"}
+            </span>
 
             {/* Source */}
             <span className="text-sm text-muted truncate">
@@ -212,7 +219,7 @@ export default async function LeadsPage({
               {lead.latest_stage ? tStage(lead.latest_stage as "valid" | "consult" | "invite_trial" | "trial") : "—"}
             </span>
 
-            {/* Contact count + quick add */}
+            {/* Contact Logs count + quick add */}
             <div className="flex items-center gap-1">
               <span className="text-sm text-muted">{lead.contact_count}</span>
               <QuickContactModal
