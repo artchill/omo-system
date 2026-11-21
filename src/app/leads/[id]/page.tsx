@@ -1,0 +1,424 @@
+import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
+import Link from "next/link";
+import { requirePermission, requireUser } from "@/lib/auth";
+import { can } from "@/domain/roles";
+import { findLeadById } from "@/db/leads";
+import { listContactLogs } from "@/db/contact-logs";
+import { listStageEvents } from "@/db/stage-events";
+import { listConsultInvites } from "@/db/consult-invites";
+import { listDealsByLead } from "@/db/deals";
+import { listSources } from "@/db/sources";
+import { listUsers } from "@/db/users";
+import { getCommissionDefaults } from "@/db/settings";
+import { LEAD_STATUSES } from "@/domain/lead-status";
+import {
+  AGE_GROUPS,
+  LEARNING_NEEDS,
+  STUDENT_TYPES,
+  CONTACT_CHANNELS,
+  CONTACT_RESULTS,
+  STAGE_TYPES,
+  PLANS,
+  CAMPUSES,
+} from "@/domain/enums";
+import { Shell } from "@/components/Header";
+import { Icon } from "@/components/Icon";
+import { StatusBadge } from "../StatusBadge";
+import { EditLeadModal } from "./EditLeadModal";
+import { StatusChanger } from "./StatusChanger";
+import { DetailTabs } from "./DetailTabs";
+import { ContactLogTab } from "./ContactLogTab";
+import { StageTab } from "./StageTab";
+import { ConsultInviteTab } from "./ConsultInviteTab";
+import { DealTab } from "./DealTab";
+
+type PageProps = { params: Promise<{ id: string }> };
+
+export default async function LeadDetailPage({ params }: PageProps) {
+  const user = await requirePermission("leads.view");
+  const { id: idStr } = await params;
+  const id = parseInt(idStr, 10);
+  const lead = findLeadById(id);
+  if (!lead) return notFound();
+
+  const [
+    t, tc, ts, tCh, tCr, tSt, tCi, tD, tAg, tNeed, tStType, tPlan, tCampus, tErr,
+  ] = await Promise.all([
+    getTranslations("Leads"),
+    getTranslations("Common"),
+    getTranslations("LeadStatus"),
+    getTranslations("Channel"),
+    getTranslations("ContactResult"),
+    getTranslations("Stage"),
+    getTranslations("ConsultInvite"),
+    getTranslations("Deals"),
+    getTranslations("AgeGroup"),
+    getTranslations("LearningNeed"),
+    getTranslations("StudentType"),
+    getTranslations("Plan"),
+    getTranslations("Campus"),
+    getTranslations("Errors"),
+  ]);
+
+  const contactLogs = listContactLogs(id);
+  const stageEvents = listStageEvents(id);
+  const consultInvites = listConsultInvites(id);
+  const deals = listDealsByLead(id);
+
+  const sources = listSources(false).map((s) => ({
+    value: String(s.id),
+    label: s.name,
+  }));
+  const allUsers = listUsers();
+  const assistants = allUsers
+    .filter((u) => u.active && (u.role === "assistant" || u.role === "admin"))
+    .map((u) => ({ value: String(u.id), label: u.name }));
+  const salesUsers = allUsers
+    .filter((u) => u.active && (u.role === "sales" || u.role === "admin"))
+    .map((u) => ({ value: String(u.id), label: u.name }));
+
+  const statusOptions = LEAD_STATUSES.map((s) => ({
+    value: s,
+    label: ts(s),
+  }));
+  const ageGroupOptions = AGE_GROUPS.map((a) => ({ value: a, label: tAg(a) }));
+  const needOptions = LEARNING_NEEDS.map((n) => ({ value: n, label: tNeed(n) }));
+  const studentTypeOptions = STUDENT_TYPES.map((s) => ({
+    value: s,
+    label: tStType(s),
+  }));
+
+  const editLabels: Record<string, string> = {
+    edit: tc("edit"),
+    editTitle: `${tc("edit")} — ${lead.name}`,
+    name: t("name"),
+    phone: t("phone"),
+    email: t("email"),
+    lineId: t("lineId"),
+    source: t("source"),
+    subSource: t("subSource"),
+    assistant: t("assistant"),
+    sales: t("sales"),
+    entryDate: t("entryDate"),
+    ageGroup: t("ageGroup"),
+    need: t("need"),
+    studentType: t("studentType"),
+    expectedDepart: t("expectedDepart"),
+    expectedWeeks: t("expectedWeeks"),
+    nextContact: t("nextContact"),
+    note: t("note"),
+    save: tc("save"),
+    saving: tc("loading"),
+    cancel: tc("cancel"),
+    errGeneric: tErr("generic"),
+  };
+
+  // Contact log labels
+  const contactLabels: Record<string, string> = {
+    title: t("contacts"),
+    add: "+" /* ContactLog.add */,
+    channel: tCh("line") ? "Channel" : "Channel",
+    result: "Result",
+    note: t("note"),
+    by: "—",
+    save: tc("save"),
+    cancel: tc("cancel"),
+    noData: tc("noData"),
+    errGeneric: tErr("generic"),
+  };
+  // Add channel labels
+  for (const ch of CONTACT_CHANNELS) contactLabels[`ch_${ch}`] = tCh(ch);
+  // Add result labels
+  for (const cr of CONTACT_RESULTS) contactLabels[`cr_${cr}`] = tCr(cr);
+
+  // Stage labels
+  const stageLabels: Record<string, string> = {
+    title: t("stages"),
+    add: tSt("add"),
+    stage: t("stages"),
+    eventDate: tSt("eventDate"),
+    note: tSt("note"),
+    by: "—",
+    save: tc("save"),
+    cancel: tc("cancel"),
+    noData: tc("noData"),
+    errGeneric: tErr("generic"),
+  };
+  for (const st of STAGE_TYPES) stageLabels[`st_${st}`] = tSt(st);
+
+  // Consult invite labels
+  const inviteLabels: Record<string, string> = {
+    title: t("invites"),
+    add: tCi("add"),
+    scheduledAt: tCi("scheduledAt"),
+    by: "—",
+    save: tc("save"),
+    cancel: tc("cancel"),
+    noData: tc("noData"),
+    noSchedule: "—",
+    attended: tCi("attended"),
+    absent: tCi("absent"),
+    absentReason: tCi("absentReason"),
+    att_pending: tCi("pending"),
+    att_attended: tCi("attended"),
+    att_absent: tCi("absent"),
+    ar_no_response: tCi("no_response"),
+    ar_not_interested: tCi("not_interested"),
+    ar_no_show: tCi("no_show"),
+    ar_other: tCi("other"),
+  };
+
+  // Deal labels
+  const commDefaults = getCommissionDefaults();
+  const dealLabels: Record<string, string> = {
+    title: t("deals"),
+    add: tD("add"),
+    dealDate: tD("dealDate"),
+    programType: tD("programType"),
+    regular: tD("regular"),
+    camp: tD("camp"),
+    plan: tD("plan"),
+    campus: tD("campus"),
+    lodging: tD("lodging"),
+    homestay: tD("homestay"),
+    dormitory: tD("dormitory"),
+    weeks: tD("weeks"),
+    departDate: tD("departDate"),
+    returnDate: tD("returnDate"),
+    quoteUsd: tD("quoteUsd"),
+    fxRate: tD("fxRate"),
+    amountTwd: tD("amountTwd"),
+    regFeeUsd: tD("regFeeUsd"),
+    commissionRate: tD("commissionRate"),
+    netUsd: tD("netUsd"),
+    netTwd: tD("netTwd"),
+    paidCurrency: tD("paidCurrency"),
+    paidAmount: tD("paidAmount"),
+    keyPoints: tD("keyPoints"),
+    note: tD("note"),
+    noDeals: tD("noDeals"),
+    save: tc("save"),
+    cancel: tc("cancel"),
+    errGeneric: tErr("generic"),
+    pt_regular: tD("regular"),
+    pt_camp: tD("camp"),
+  };
+
+  const planOptions = PLANS.map((p) => ({ value: p, label: tPlan(p) }));
+  const campusOptions = CAMPUSES.map((c) => ({ value: c, label: tCampus(c) }));
+
+  const tabs = [
+    {
+      id: "contacts",
+      label: `${t("contacts")} (${contactLogs.length})`,
+      content: (
+        <ContactLogTab
+          leadId={id}
+          logs={contactLogs.map((l) => ({
+            id: l.id,
+            channel: l.channel,
+            result: l.result,
+            note: l.note,
+            logged_at: l.logged_at,
+            user_name: l.user_name ?? "—",
+          }))}
+          channels={CONTACT_CHANNELS.map((c) => ({ value: c, label: tCh(c) }))}
+          results={CONTACT_RESULTS.map((r) => ({ value: r, label: tCr(r) }))}
+          labels={contactLabels}
+        />
+      ),
+    },
+    {
+      id: "stages",
+      label: `${t("stages")} (${stageEvents.length})`,
+      content: (
+        <StageTab
+          leadId={id}
+          stages={stageEvents.map((s) => ({
+            id: s.id,
+            stage: s.stage,
+            event_date: s.event_date,
+            note: s.note,
+            created_at: s.event_date,
+            user_name: s.user_name ?? "—",
+          }))}
+          stageTypes={STAGE_TYPES.map((s) => ({ value: s, label: tSt(s) }))}
+          labels={stageLabels}
+        />
+      ),
+    },
+    {
+      id: "invites",
+      label: `${t("invites")} (${consultInvites.length})`,
+      content: (
+        <ConsultInviteTab
+          leadId={id}
+          invites={consultInvites.map((inv) => ({
+            id: inv.id,
+            scheduled_at: inv.scheduled_at,
+            attendance: inv.attendance,
+            absent_reason: inv.absent_reason,
+            created_at: inv.invited_at,
+            inviter_name: inv.inviter_name ?? "—",
+          }))}
+          labels={inviteLabels}
+        />
+      ),
+    },
+    {
+      id: "deals",
+      label: `${t("deals")} (${deals.length})`,
+      content: (
+        <DealTab
+          leadId={id}
+          deals={deals}
+          plans={planOptions}
+          campuses={campusOptions}
+          canEditFinancials={can(user.role, "deals.edit_financials")}
+          defaults={commDefaults}
+          labels={dealLabels}
+        />
+      ),
+    },
+  ];
+
+  return (
+    <Shell
+      title={lead.name}
+      subtitle={`#${lead.id} · ${lead.entry_date}`}
+    >
+      {/* Back link */}
+      <Link href="/leads" className="mb-6 inline-flex items-center gap-1 text-sm text-muted hover:text-foreground transition-colors">
+        <Icon name="chevronRight" className="size-4 rotate-180" />
+        {tc("back")}
+      </Link>
+
+      {/* Lead info card */}
+      <div className="glass mb-6 p-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="space-y-3">
+            {/* Status + changer */}
+            <div className="flex flex-wrap items-center gap-3">
+              <StatusBadge status={lead.status} label={ts(lead.status)} />
+              {can(user.role, "leads.edit") && (
+                <StatusChanger
+                  leadId={id}
+                  current={lead.status}
+                  statuses={statusOptions}
+                  label={t("status")}
+                />
+              )}
+            </div>
+
+            {/* Contact info */}
+            <div className="grid gap-x-8 gap-y-1 text-sm sm:grid-cols-2 lg:grid-cols-3">
+              {lead.phone && (
+                <div>
+                  <span className="text-xs text-muted">{t("phone")}</span>
+                  <p>{lead.phone}</p>
+                </div>
+              )}
+              {lead.email && (
+                <div>
+                  <span className="text-xs text-muted">{t("email")}</span>
+                  <p>{lead.email}</p>
+                </div>
+              )}
+              {lead.line_id && (
+                <div>
+                  <span className="text-xs text-muted">{t("lineId")}</span>
+                  <p>{lead.line_id}</p>
+                </div>
+              )}
+              {lead.source_name && (
+                <div>
+                  <span className="text-xs text-muted">{t("source")}</span>
+                  <p>{lead.source_name}{lead.sub_source ? ` / ${lead.sub_source}` : ""}</p>
+                </div>
+              )}
+              {lead.assistant_name && (
+                <div>
+                  <span className="text-xs text-muted">{t("assistant")}</span>
+                  <p>{lead.assistant_name}</p>
+                </div>
+              )}
+              {lead.sales_name && (
+                <div>
+                  <span className="text-xs text-muted">{t("sales")}</span>
+                  <p>{lead.sales_name}</p>
+                </div>
+              )}
+              {lead.age_group && (
+                <div>
+                  <span className="text-xs text-muted">{t("ageGroup")}</span>
+                  <p>{tAg(lead.age_group as typeof AGE_GROUPS[number])}</p>
+                </div>
+              )}
+              {lead.need && (
+                <div>
+                  <span className="text-xs text-muted">{t("need")}</span>
+                  <p>{tNeed(lead.need as typeof LEARNING_NEEDS[number])}</p>
+                </div>
+              )}
+              {lead.expected_depart && (
+                <div>
+                  <span className="text-xs text-muted">{t("expectedDepart")}</span>
+                  <p>{lead.expected_depart}</p>
+                </div>
+              )}
+              {lead.next_contact && (
+                <div>
+                  <span className="text-xs text-muted">{t("nextContact")}</span>
+                  <p>{lead.next_contact}</p>
+                </div>
+              )}
+            </div>
+
+            {lead.note && (
+              <div>
+                <span className="text-xs text-muted">{t("note")}</span>
+                <p className="text-sm">{lead.note}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Edit button */}
+          {can(user.role, "leads.edit") && (
+            <EditLeadModal
+              lead={{
+                id: lead.id,
+                name: lead.name,
+                phone: lead.phone,
+                email: lead.email,
+                line_id: lead.line_id,
+                source_id: lead.source_id,
+                sub_source: lead.sub_source,
+                assistant_id: lead.assistant_id,
+                sales_id: lead.sales_id,
+                entry_date: lead.entry_date,
+                age_group: lead.age_group,
+                need: lead.need,
+                student_type: lead.student_type,
+                expected_depart: lead.expected_depart,
+                expected_weeks: lead.expected_weeks,
+                next_contact: lead.next_contact,
+                note: lead.note,
+              }}
+              sources={sources}
+              assistants={assistants}
+              salesUsers={salesUsers}
+              ageGroups={ageGroupOptions}
+              needs={needOptions}
+              studentTypes={studentTypeOptions}
+              labels={editLabels}
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Tabs: contacts, stages, invites, deals */}
+      <DetailTabs tabs={tabs} />
+    </Shell>
+  );
+}

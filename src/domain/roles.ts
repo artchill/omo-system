@@ -13,6 +13,17 @@ export function isRole(value: unknown): value is Role {
  */
 export const PERMISSIONS = {
   "users.manage": ["admin"],
+  "leads.view": ["admin", "sales", "assistant"],
+  "leads.create": ["admin", "sales"],
+  "leads.edit": ["admin", "sales", "assistant"],
+  "leads.import": ["admin", "sales"],
+  "deals.create": ["admin", "sales", "assistant"],
+  "deals.edit_financials": ["admin", "sales"],
+  "dashboard.view": ["admin", "sales"],
+  "dashboard.assistants": ["admin", "sales"],
+  "settings.manage": ["admin"],
+  "audit.view": ["admin"],
+  "sources.manage": ["admin"],
 } as const satisfies Record<string, readonly Role[]>;
 
 export type Permission = keyof typeof PERMISSIONS;

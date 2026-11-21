@@ -36,4 +36,167 @@ export const MIGRATIONS: { id: number; sql: string }[] = [
       CREATE INDEX login_failures_email_at ON login_failures(email, at);
     `,
   },
+  {
+    id: 2,
+    sql: `
+      -- Lead sources (e.g. 官網, FB廣告, 轉介). Managed by admin.
+      CREATE TABLE sources (
+        id      INTEGER PRIMARY KEY AUTOINCREMENT,
+        name    TEXT    NOT NULL UNIQUE COLLATE NOCASE,
+        grade   TEXT    NOT NULL DEFAULT '',
+        active  INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0,1)),
+        sort    INTEGER NOT NULL DEFAULT 0
+      );
+
+      -- Seed default sources from the data dictionary
+      INSERT INTO sources (name, grade, sort) VALUES
+        ('官網',       'A', 1),
+        ('社群',       'A', 2),
+        ('電話進線',   'A', 3),
+        ('FB廣告',     'C', 4),
+        ('庫存名單',   '庫', 5),
+        ('部落客',     '',  6),
+        ('轉介',       'B', 7),
+        ('線上轉介',   'B', 8),
+        ('線上轉線下', '轉', 9),
+        ('續約',       '續&M', 10);
+
+      -- Leads: the core entity
+      CREATE TABLE leads (
+        id               INTEGER PRIMARY KEY AUTOINCREMENT,
+        entry_date       TEXT    NOT NULL,
+        cycle_start      TEXT,
+        source_id        INTEGER REFERENCES sources(id),
+        sub_source       TEXT    NOT NULL DEFAULT '',
+        assistant_id     INTEGER REFERENCES users(id),
+        sales_id         INTEGER REFERENCES users(id),
+        status           TEXT    NOT NULL DEFAULT 'pending_contact',
+        name             TEXT    NOT NULL DEFAULT '',
+        phone            TEXT    NOT NULL DEFAULT '',
+        email            TEXT    NOT NULL DEFAULT '' COLLATE NOCASE,
+        line_id          TEXT    NOT NULL DEFAULT '',
+        age_group        TEXT    NOT NULL DEFAULT '',
+        need             TEXT    NOT NULL DEFAULT '',
+        student_type     TEXT    NOT NULL DEFAULT '',
+        note             TEXT    NOT NULL DEFAULT '',
+        expected_depart  TEXT,
+        expected_weeks   INTEGER,
+        next_contact     TEXT,
+        data_error_flag  INTEGER NOT NULL DEFAULT 0 CHECK (data_error_flag IN (0,1)),
+        created_at       TEXT    NOT NULL,
+        updated_at       TEXT    NOT NULL,
+        archived_at      TEXT
+      );
+      CREATE INDEX leads_status     ON leads(status);
+      CREATE INDEX leads_assistant  ON leads(assistant_id);
+      CREATE INDEX leads_sales      ON leads(sales_id);
+      CREATE INDEX leads_source     ON leads(source_id);
+      CREATE INDEX leads_next_contact ON leads(next_contact);
+
+      -- Multiple submissions can feed one lead (duplicate handling)
+      CREATE TABLE lead_submissions (
+        id           INTEGER PRIMARY KEY AUTOINCREMENT,
+        lead_id      INTEGER NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
+        submitted_at TEXT    NOT NULL,
+        source_id    INTEGER REFERENCES sources(id),
+        note         TEXT    NOT NULL DEFAULT ''
+      );
+      CREATE INDEX lead_submissions_lead ON lead_submissions(lead_id);
+
+      -- Contact log: each call, message, etc.
+      CREATE TABLE contact_logs (
+        id        INTEGER PRIMARY KEY AUTOINCREMENT,
+        lead_id   INTEGER NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
+        user_id   INTEGER NOT NULL REFERENCES users(id),
+        channel   TEXT    NOT NULL,
+        result    TEXT    NOT NULL,
+        note      TEXT    NOT NULL DEFAULT '',
+        logged_at TEXT    NOT NULL
+      );
+      CREATE INDEX contact_logs_lead ON contact_logs(lead_id);
+
+      -- Stage events: 有效 / 諮詢 / 預約試聽 / 試聽
+      CREATE TABLE stage_events (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        lead_id    INTEGER NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
+        user_id    INTEGER NOT NULL REFERENCES users(id),
+        stage      TEXT    NOT NULL CHECK (stage IN ('valid','consult','invite_trial','trial')),
+        event_date TEXT    NOT NULL,
+        note       TEXT    NOT NULL DEFAULT ''
+      );
+      CREATE INDEX stage_events_lead ON stage_events(lead_id);
+
+      -- Consult invites: invitations to consultation sessions
+      CREATE TABLE consult_invites (
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        lead_id       INTEGER NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
+        invited_by    INTEGER NOT NULL REFERENCES users(id),
+        invited_at    TEXT    NOT NULL,
+        scheduled_at  TEXT,
+        attendance    TEXT    NOT NULL DEFAULT 'pending' CHECK (attendance IN ('pending','attended','absent')),
+        absent_reason TEXT    NOT NULL DEFAULT ''
+      );
+      CREATE INDEX consult_invites_lead ON consult_invites(lead_id);
+
+      -- Deals: won leads with financial details
+      CREATE TABLE deals (
+        id              INTEGER PRIMARY KEY AUTOINCREMENT,
+        lead_id         INTEGER NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
+        deal_date       TEXT    NOT NULL,
+        lodging         TEXT    NOT NULL DEFAULT '' CHECK (lodging IN ('','homestay','dormitory')),
+        program_type    TEXT    NOT NULL DEFAULT '' CHECK (program_type IN ('','regular','camp')),
+        plan            TEXT    NOT NULL DEFAULT '',
+        campus          TEXT    NOT NULL DEFAULT '',
+        depart_date     TEXT,
+        return_date     TEXT,
+        weeks           INTEGER,
+        quote_usd       REAL,
+        fx_rate         REAL,
+        amount_twd      REAL,
+        reg_fee_usd     REAL    NOT NULL DEFAULT 100,
+        commission_rate REAL    NOT NULL DEFAULT 0.35,
+        net_usd         REAL,
+        net_twd         REAL,
+        paid_currency   TEXT    NOT NULL DEFAULT 'TWD' CHECK (paid_currency IN ('TWD','USD')),
+        paid_amount     REAL,
+        key_points      TEXT    NOT NULL DEFAULT '',
+        note            TEXT    NOT NULL DEFAULT '',
+        created_at      TEXT    NOT NULL,
+        updated_at      TEXT    NOT NULL
+      );
+      CREATE INDEX deals_lead ON deals(lead_id);
+
+      -- Audit log: immutable record of changes
+      CREATE TABLE audit_log (
+        id      INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER REFERENCES users(id),
+        lead_id INTEGER REFERENCES leads(id),
+        entity  TEXT    NOT NULL,
+        action  TEXT    NOT NULL,
+        changes TEXT    NOT NULL DEFAULT '{}',
+        at      TEXT    NOT NULL
+      );
+      CREATE INDEX audit_log_lead ON audit_log(lead_id);
+      CREATE INDEX audit_log_at   ON audit_log(at);
+
+      -- Key-value settings
+      CREATE TABLE settings (
+        key   TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+      );
+
+      -- Seed default settings
+      INSERT INTO settings (key, value) VALUES
+        ('peak_months',       '1,2,7,8'),
+        ('countdown_new',     '3'),
+        ('countdown_grace',   '1'),
+        ('countdown_active',  '10'),
+        ('countdown_consult', '30'),
+        ('default_reg_fee',   '100'),
+        ('default_rate_normal', '0.35'),
+        ('default_rate_camp',   '0.25'),
+        ('default_rate_day',    '0.20'),
+        ('dashboard_visibility', 'admin,sales');
+    `,
+  },
 ];

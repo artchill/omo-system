@@ -64,11 +64,14 @@ export async function Shell({
 
   const items: NavItem[] = [
     { href: "/", label: tn("dashboard"), icon: "dashboard" },
-    { href: "/leads", label: tn("leads"), icon: "leads", disabled: true, hint: tn("soon") },
+    { href: "/leads", label: tn("leads"), icon: "leads" },
     { href: "/help", label: tn("help"), icon: "help" },
   ];
   if (can(user.role, "users.manage")) {
     items.push({ href: "/admin/users", label: tn("users"), icon: "users" });
+    items.push({ href: "/admin/sources", label: tn("sources"), icon: "sources" });
+    items.push({ href: "/admin/settings", label: tn("settings"), icon: "settings" });
+    items.push({ href: "/admin/audit", label: tn("auditLog"), icon: "audit" });
   }
   const initials = user.name.trim().slice(0, 2).toUpperCase();
 

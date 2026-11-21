@@ -13,6 +13,9 @@ export const ERROR_CODES = [
   "self",
   "notFound",
   "generic",
+  "sourceNameTaken",
+  "leadNotFound",
+  "permissionDenied",
 ] as const;
 export type ErrorCode = (typeof ERROR_CODES)[number];
 
