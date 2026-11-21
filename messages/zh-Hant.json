@@ -92,6 +92,7 @@
     "inactive": "已停用",
     "teamMembers": "團隊成員",
     "cancel": "取消",
+    "edit": "編輯",
     "ok": {
       "created": "已建立使用者。",
       "updated": "已更新使用者，對方需要重新登入。",

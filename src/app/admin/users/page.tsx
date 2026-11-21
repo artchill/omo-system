@@ -5,8 +5,7 @@ import { listUsers } from "@/db/users";
 import { requirePermission } from "@/lib/auth";
 import { isErrorCode } from "@/lib/errors";
 import { AddUserModal } from "./AddUserModal";
-import { ResetPasswordModal } from "./ResetPasswordModal";
-import { updateUserAction } from "./actions";
+import { EditUserModal } from "./EditUserModal";
 
 const OK_CODES = ["created", "updated", "passwordReset"] as const;
 type OkCode = (typeof OK_CODES)[number];
@@ -19,7 +18,7 @@ function Avatar({ name }: { name: string }) {
     .join("")
     .toUpperCase();
   return (
-    <div className="size-11 shrink-0 rounded-full bg-gradient-to-br from-[var(--accent-from)] to-[var(--accent-to)] flex items-center justify-center font-bold text-sm text-[#04101f] select-none">
+    <div className="size-9 shrink-0 rounded-full bg-gradient-to-br from-[var(--accent-from)] to-[var(--accent-to)] flex items-center justify-center font-bold text-xs text-[#04101f] select-none">
       {initials}
     </div>
   );
@@ -33,8 +32,21 @@ function RoleBadge({ role, label }: { role: string; label: string }) {
   };
   return (
     <span
-      className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${colors[role] ?? "border-edge text-muted bg-glass"}`}
+      className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[0.7rem] font-medium leading-none ${colors[role] ?? "border-edge text-muted bg-glass"}`}
     >
+      {label}
+    </span>
+  );
+}
+
+function StatusDot({ active, label }: { active: boolean; label: string }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 text-xs ${active ? "text-good" : "text-bad"}`}
+    >
+      <span
+        className={`size-1.5 rounded-full ${active ? "bg-good" : "bg-bad"}`}
+      />
       {label}
     </span>
   );
@@ -58,7 +70,6 @@ export default async function UsersPage({
       : null;
   const users = listUsers();
 
-  /* Serialisable props for client components */
   const roleOptions = ROLES.map((r) => ({ value: r, label: tr(r) }));
 
   return (
@@ -84,7 +95,7 @@ export default async function UsersPage({
         </p>
       )}
 
-      {/* ── Header row: title + Add button ── */}
+      {/* ── Header row ── */}
       <div className="mb-5 flex items-center justify-between">
         <h2 className="text-base font-semibold flex items-center gap-2">
           <svg
@@ -118,99 +129,74 @@ export default async function UsersPage({
         />
       </div>
 
-      {/* ── User cards ── */}
-      <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
-        {users.map((u) => (
+      {/* ── User table ── */}
+      <div className="glass overflow-hidden">
+        {/* Column headers — hidden on mobile */}
+        <div className="hidden sm:grid sm:grid-cols-[1fr_8rem_6rem_5rem] items-center gap-4 border-b border-edge px-5 py-3 text-xs font-medium text-muted uppercase tracking-wider">
+          <span>{t("name")}</span>
+          <span>{t("role")}</span>
+          <span>{t("active")}</span>
+          <span className="text-right">{t("edit")}</span>
+        </div>
+
+        {/* Rows */}
+        {users.map((u, i) => (
           <div
             key={u.id}
-            className={`glass p-5 flex flex-col ${u.active === 1 ? "" : "opacity-50"}`}
+            className={`grid grid-cols-1 sm:grid-cols-[1fr_8rem_6rem_5rem] items-center gap-x-4 gap-y-2 px-5 py-4 transition-colors hover:bg-white/[0.03] ${i > 0 ? "border-t border-edge/50" : ""} ${u.active === 1 ? "" : "opacity-50"}`}
           >
-            {/* Identity */}
-            <div className="flex items-start gap-3 mb-4">
+            {/* Name + email */}
+            <div className="flex items-center gap-3 min-w-0">
               <Avatar name={u.name} />
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-semibold text-[0.95rem] leading-tight">
-                    {u.name}
-                  </span>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-sm truncate">{u.name}</span>
                   {u.id === me.id && (
-                    <span className="text-xs text-cyan-400 font-medium">
+                    <span className="shrink-0 text-[0.65rem] text-cyan-400 font-medium">
                       {t("you")}
                     </span>
                   )}
                 </div>
-                <div className="text-sm text-muted mt-0.5 truncate">
-                  {u.email}
-                </div>
+                <div className="text-xs text-muted truncate">{u.email}</div>
               </div>
             </div>
 
-            {/* Role badge + status */}
-            <div className="flex items-center gap-2 mb-4">
+            {/* Role badge */}
+            <div className="sm:justify-self-start">
               <RoleBadge role={u.role} label={tr(u.role)} />
-              {u.active === 1 ? (
-                <span className="inline-flex items-center gap-1.5 text-xs text-good">
-                  <span className="size-1.5 rounded-full bg-good" />
-                  {t("active")}
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1.5 text-xs text-bad">
-                  <span className="size-1.5 rounded-full bg-bad" />
-                  {t("inactive")}
-                </span>
-              )}
             </div>
 
-            {/* Divider */}
-            <div className="border-t border-edge mb-4 mt-auto" />
+            {/* Status */}
+            <div>
+              <StatusDot
+                active={u.active === 1}
+                label={u.active === 1 ? t("active") : t("inactive")}
+              />
+            </div>
 
-            {/* Actions row */}
-            <form
-              action={updateUserAction}
-              className="flex flex-wrap items-end gap-3"
-            >
-              <input type="hidden" name="id" value={u.id} />
-              <div className="flex-1 min-w-[7rem]">
-                <label className="mb-1.5 block text-xs font-medium text-muted">
-                  {t("role")}
-                </label>
-                <select
-                  name="role"
-                  defaultValue={u.role}
-                  className="field"
-                  aria-label={t("role")}
-                >
-                  {ROLES.map((r) => (
-                    <option key={r} value={r}>
-                      {tr(r)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <label className="flex items-center gap-2 text-sm pb-[0.6rem] cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  className="size-4 accent-cyan-400 rounded"
-                  name="active"
-                  defaultChecked={u.active === 1}
-                />
-                {t("active")}
-              </label>
-              <button type="submit" className="btn btn-ghost text-xs">
-                {t("save")}
-              </button>
-            </form>
-            <ResetPasswordModal
-              userId={u.id}
-              userName={u.name}
-              labels={{
-                trigger: t("resetPassword"),
-                title: t("resetPassword"),
-                password: t("passwordMin"),
-                submit: t("resetPassword"),
-                cancel: t("cancel"),
-              }}
-            />
+            {/* Edit button */}
+            <div className="sm:justify-self-end">
+              <EditUserModal
+                user={{
+                  id: u.id,
+                  name: u.name,
+                  email: u.email,
+                  role: u.role,
+                  active: u.active,
+                }}
+                isSelf={u.id === me.id}
+                labels={{
+                  edit: t("edit"),
+                  role: t("role"),
+                  active: t("active"),
+                  save: t("save"),
+                  cancel: t("cancel"),
+                  resetPassword: t("resetPassword"),
+                  password: t("passwordMin"),
+                }}
+                roles={roleOptions}
+              />
+            </div>
           </div>
         ))}
       </div>
