@@ -1,0 +1,53 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Icon, type IconName } from "./Icon";
+
+export type NavItem = {
+  href: string;
+  label: string;
+  icon: IconName;
+  disabled?: boolean;
+  hint?: string;
+};
+
+/** Scrolling pill row for mobile. */
+export function MobileNav({ items }: { items: NavItem[] }) {
+  const pathname = usePathname();
+
+  return (
+    <nav className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
+      {items.map((item) => {
+        const active =
+          item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+        const base = "flex items-center gap-2 shrink-0 whitespace-nowrap rounded-xl px-3.5 py-2.5 text-sm font-medium transition-colors";
+
+        if (item.disabled) {
+          return (
+            <span key={item.href} aria-disabled="true" className={`${base} cursor-default text-muted/70`}>
+              <Icon name={item.icon} />
+              {item.label}
+            </span>
+          );
+        }
+
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            aria-current={active ? "page" : undefined}
+            className={`${base} ${
+              active
+                ? "bg-gradient-to-r from-blue-500/25 to-cyan-400/10 text-white shadow-[inset_0_0_0_1px_rgba(96,165,250,0.35)]"
+                : "text-muted hover:bg-white/5 hover:text-foreground"
+            }`}
+          >
+            <Icon name={item.icon} />
+            {item.label}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}

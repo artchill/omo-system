@@ -25,7 +25,9 @@
     "total": "{count} total",
     "page": "Page {page} of {total}",
     "prev": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "collapse": "Collapse sidebar",
+    "expand": "Expand sidebar"
   },
   "LanguageSwitcher": {
     "label": "Language"

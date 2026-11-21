@@ -3,9 +3,9 @@ import Link from "next/link";
 import { logout } from "@/app/login/actions";
 import { can } from "@/domain/roles";
 import { getCurrentUser } from "@/lib/auth";
-import { Icon } from "./Icon";
 import { LanguageSwitcher } from "./LanguageSwitcher";
-import { NavLinks, type NavItem } from "./NavLinks";
+import { Sidebar, type NavItem } from "./Sidebar";
+import { MobileNav } from "./MobileNav";
 
 function Brand() {
   return (
@@ -23,8 +23,7 @@ function Brand() {
 
 /**
  * Page frame used by every page.
- * Signed in: sidebar + top bar. Signed out (login / setup): centred, language switch only.
- * The page itself supplies `title` and its content.
+ * Signed in: collapsible sidebar + top bar. Signed out: centred, language switch only.
  */
 export async function Shell({
   title,
@@ -75,21 +74,24 @@ export async function Shell({
   }
   const initials = user.name.trim().slice(0, 2).toUpperCase();
 
+  const sidebarLabels = {
+    signOut: t("signOut"),
+    collapse: t("collapse"),
+    expand: t("expand"),
+  };
+
   return (
     <div className="min-h-screen md:flex">
-      <aside className="glass sticky top-4 m-4 mr-0 hidden h-[calc(100vh-2rem)] w-64 shrink-0 flex-col p-4 md:flex">
-        <div className="px-2 pb-6 pt-2">
-          <Brand />
-        </div>
-        <NavLinks items={items} layout="vertical" />
-        <form action={logout} className="mt-auto">
-          <button type="submit" className="btn btn-ghost w-full justify-start">
-            <Icon name="logout" />
-            {t("signOut")}
-          </button>
-        </form>
-      </aside>
+      {/* Desktop sidebar */}
+      <Sidebar
+        items={items}
+        user={{ name: user.name, role: tr(user.role), initials }}
+        labels={sidebarLabels}
+        logoutAction={logout}
+        langSwitcher={<LanguageSwitcher />}
+      />
 
+      {/* Main content */}
       <div className="min-w-0 flex-1 px-4 py-4 md:px-8 md:py-6">
         <header className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div className="min-w-0">
@@ -100,8 +102,8 @@ export async function Shell({
             )}
             {subtitle && <p className="mt-1 text-sm text-muted">{subtitle}</p>}
           </div>
-          <div className="flex items-center gap-3">
-            <LanguageSwitcher />
+          {/* Desktop top-right: user chip + lang (lang now in sidebar, user chip stays) */}
+          <div className="hidden items-center gap-3 md:flex">
             <div className="chip py-1 pl-1 pr-3">
               <span
                 aria-hidden="true"
@@ -115,17 +117,22 @@ export async function Shell({
               </span>
             </div>
           </div>
+          {/* Mobile: language switcher */}
+          <div className="md:hidden">
+            <LanguageSwitcher />
+          </div>
         </header>
 
+        {/* Mobile nav */}
         <div className="mb-5 md:hidden">
-          <NavLinks items={items} layout="horizontal" />
+          <MobileNav items={items} />
         </div>
 
         <main className={narrow ? "max-w-3xl" : ""}>{children}</main>
 
         <form action={logout} className="mt-8 md:hidden">
           <button type="submit" className="btn btn-ghost">
-            <Icon name="logout" />
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="size-[1.15rem]"><path d="M10 4H5v16h5M15 8l4 4-4 4M19 12H9" /></svg>
             {t("signOut")}
           </button>
         </form>
