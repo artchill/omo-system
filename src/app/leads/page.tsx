@@ -13,6 +13,7 @@ import { AddLeadModal } from "./AddLeadModal";
 import { StatusBadge } from "./StatusBadge";
 import { Pagination } from "./Pagination";
 import { QuickContactModal } from "./QuickContactModal";
+import { StopPropagation } from "./StopPropagation";
 
 const PAGE_SIZE = 30;
 
@@ -310,7 +311,7 @@ export default async function LeadsPage({
                     <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767A2 2 0 009.828 17h2.344l2.828 2.828V17h1a2 2 0 002-2v-4a2 2 0 00-2-2h-1z" />
                   </svg>
                   <span className="tabular-nums">{lead.contact_count}</span>
-                  <span onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+                  <StopPropagation>
                     <QuickContactModal
                       leadId={lead.id}
                       leadName={lead.name}
@@ -318,7 +319,7 @@ export default async function LeadsPage({
                       results={resultOptions}
                       labels={contactLabels}
                     />
-                  </span>
+                  </StopPropagation>
                 </span>
               </div>
             </div>
