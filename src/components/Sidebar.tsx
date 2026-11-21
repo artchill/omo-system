@@ -44,12 +44,32 @@ export function Sidebar({ items, user, labels, logoutAction, langSwitcher }: Sid
   }, [toggle]);
 
   return (
-    <aside
-      className="sidebar-glass sticky top-4 m-4 mr-0 hidden h-[calc(100vh-2rem)] shrink-0 flex-col md:flex"
-      style={{ width: collapsed ? 72 : 256 }}
-    >
-      {/* Brand + collapse toggle */}
-      <div className="relative flex items-center px-4 pb-5 pt-5">
+    <div className="relative sticky top-4 m-4 mr-0 hidden shrink-0 md:block" style={{ width: collapsed ? 72 : 256, transition: "width 0.5s cubic-bezier(0.32,1,0.16,1)" }}>
+      {/* Collapse toggle — sits outside the aside so it's never clipped */}
+      <button
+        onClick={toggle}
+        aria-expanded={!collapsed}
+        aria-label={collapsed ? labels.expand : labels.collapse}
+        aria-keyshortcuts="Meta+B"
+        className="absolute -right-3 top-8 z-20 grid size-7 place-items-center rounded-full border border-white/15 bg-gradient-to-b from-[#1e293b] to-[#141c2e] text-blue-300 shadow-[0_2px_8px_rgba(0,0,0,0.5)] transition-all hover:border-blue-400/40 hover:text-white hover:shadow-[0_2px_12px_rgba(59,130,246,0.3)]"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="size-3.5 transition-transform duration-300"
+          style={{ transform: collapsed ? "rotate(180deg)" : undefined }}
+        >
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+      </button>
+
+      <aside className="sidebar-glass flex h-[calc(100vh-2rem)] flex-col">
+      {/* Brand */}
+      <div className="flex items-center px-4 pb-5 pt-5">
         <Link href="/" className="flex items-center gap-3 overflow-hidden">
           <span
             aria-hidden="true"
@@ -61,28 +81,6 @@ export function Sidebar({ items, user, labels, logoutAction, langSwitcher }: Sid
             OMO
           </span>
         </Link>
-
-        {/* Collapse button — positioned half-outside the sidebar */}
-        <button
-          onClick={toggle}
-          aria-expanded={!collapsed}
-          aria-label={collapsed ? labels.expand : labels.collapse}
-          aria-keyshortcuts="Meta+B"
-          className="absolute -right-3.5 top-7 z-10 grid size-7 place-items-center rounded-full border border-white/20 bg-[#141c2e] text-blue-300 shadow-lg shadow-black/40 transition-all hover:border-blue-400/50 hover:bg-[#1a2540] hover:text-blue-200 hover:shadow-blue-500/20"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="size-3.5 transition-transform duration-300"
-            style={{ transform: collapsed ? "rotate(180deg)" : undefined }}
-          >
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
-        </button>
       </div>
 
       {/* Nav items */}
@@ -167,5 +165,6 @@ export function Sidebar({ items, user, labels, logoutAction, langSwitcher }: Sid
         </form>
       </div>
     </aside>
+    </div>
   );
 }
