@@ -115,7 +115,7 @@ export default async function LeadsPage({
   const pageLabels = {
     prev: tc("prev"),
     next: tc("next"),
-    page: tc("page"),
+    page: tc("page", { page: "{page}", total: "{total}" }),
   };
 
   return (
