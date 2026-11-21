@@ -5,13 +5,14 @@ import { listLeads, type LeadListFilter } from "@/db/leads";
 import { listSources } from "@/db/sources";
 import { listUsers } from "@/db/users";
 import { LEAD_STATUSES, type LeadStatus } from "@/domain/lead-status";
-import { AGE_GROUPS, LEARNING_NEEDS, STUDENT_TYPES } from "@/domain/enums";
+import { AGE_GROUPS, LEARNING_NEEDS, STUDENT_TYPES, CONTACT_CHANNELS, CONTACT_RESULTS } from "@/domain/enums";
 import { Shell } from "@/components/Header";
 import { Icon } from "@/components/Icon";
 import { LeadFilters } from "./LeadFilters";
 import { AddLeadModal } from "./AddLeadModal";
 import { StatusBadge } from "./StatusBadge";
 import { Pagination } from "./Pagination";
+import { QuickContactModal } from "./QuickContactModal";
 
 const PAGE_SIZE = 30;
 
@@ -44,7 +45,7 @@ export default async function LeadsPage({
 
   const { rows, total } = listLeads(filter);
 
-  const [t, tc, ts, tAg, tNeed, tSt, tErr] = await Promise.all([
+  const [t, tc, ts, tAg, tNeed, tSt, tErr, tCh, tCr, tCl, tStage] = await Promise.all([
     getTranslations("Leads"),
     getTranslations("Common"),
     getTranslations("LeadStatus"),
@@ -52,6 +53,10 @@ export default async function LeadsPage({
     getTranslations("LearningNeed"),
     getTranslations("StudentType"),
     getTranslations("Errors"),
+    getTranslations("Channel"),
+    getTranslations("ContactResult"),
+    getTranslations("ContactLog"),
+    getTranslations("Stage"),
   ]);
 
   const sources = listSources(false).map((s) => ({
@@ -112,6 +117,21 @@ export default async function LeadsPage({
     filter: tc("filter"),
   };
 
+  const channelOptions = CONTACT_CHANNELS.map((c) => ({ value: c, label: tCh(c) }));
+  const resultOptions = CONTACT_RESULTS.map((r) => ({ value: r, label: tCr(r) }));
+
+  const contactLabels: Record<string, string> = {
+    add: tCl("add"),
+    channel: tCl("channel"),
+    result: tCl("result"),
+    note: tCl("note"),
+    loggedTime: tCl("loggedTime"),
+    notePlaceholder: tCl("notePlaceholder"),
+    save: tc("save"),
+    cancel: tc("cancel"),
+    errGeneric: tErr("generic"),
+  };
+
   const pageLabels = {
     prev: tc("prev"),
     next: tc("next"),
@@ -144,11 +164,12 @@ export default async function LeadsPage({
       {/* Table */}
       <div className="glass overflow-hidden">
         {/* Desktop header */}
-        <div className="hidden border-b border-edge px-5 py-3 text-xs font-medium uppercase tracking-wider text-muted lg:grid lg:grid-cols-[2fr_1fr_1fr_6rem_5rem_4rem]">
+        <div className="hidden border-b border-edge px-5 py-3 text-xs font-medium uppercase tracking-wider text-muted lg:grid lg:grid-cols-[minmax(0,2fr)_minmax(0,1.5fr)_minmax(0,1fr)_6rem_5rem_5rem_4rem]">
           <span>{t("name")}</span>
+          <span>{t("contactInfo")}</span>
           <span>{t("source")}</span>
-          <span>{t("assistant")}</span>
           <span>{t("status")}</span>
+          <span>{t("stages")}</span>
           <span>{t("contacts")}</span>
           <span />
         </div>
@@ -156,9 +177,9 @@ export default async function LeadsPage({
         {rows.map((lead) => (
           <div
             key={lead.id}
-            className="flex flex-wrap items-center gap-3 border-b border-edge px-5 py-3 transition-colors hover:bg-white/[0.03] lg:grid lg:grid-cols-[2fr_1fr_1fr_6rem_5rem_4rem]"
+            className="flex flex-wrap items-center gap-3 border-b border-edge px-5 py-3 transition-colors hover:bg-white/[0.03] lg:grid lg:grid-cols-[minmax(0,2fr)_minmax(0,1.5fr)_minmax(0,1fr)_6rem_5rem_5rem_4rem]"
           >
-            {/* Name column */}
+            {/* Name + assistant */}
             <div className="min-w-0 flex-1 lg:flex-none">
               <Link
                 href={`/leads/${lead.id}`}
@@ -166,28 +187,42 @@ export default async function LeadsPage({
               >
                 {lead.name}
               </Link>
-              {lead.phone && (
-                <span className="ml-2 text-xs text-muted">{lead.phone}</span>
+              {lead.assistant_name && (
+                <p className="text-xs text-muted truncate">{lead.assistant_name}</p>
               )}
             </div>
 
-            {/* Source */}
-            <span className="text-sm text-muted">
-              {lead.source_name ?? "—"}
-            </span>
+            {/* Contact info */}
+            <div className="min-w-0 text-xs text-muted space-y-0.5">
+              {lead.phone && <p className="truncate">{lead.phone}</p>}
+              {lead.line_id && <p className="truncate">LINE: {lead.line_id}</p>}
+              {lead.email && <p className="truncate">{lead.email}</p>}
+            </div>
 
-            {/* Assistant */}
-            <span className="text-sm text-muted">
-              {lead.assistant_name ?? "—"}
+            {/* Source */}
+            <span className="text-sm text-muted truncate">
+              {lead.source_name ?? "—"}
             </span>
 
             {/* Status */}
             <StatusBadge status={lead.status} label={ts(lead.status)} />
 
-            {/* Contact count */}
-            <span className="text-sm text-muted">
-              {lead.contact_count}
+            {/* Stage */}
+            <span className="text-xs text-muted">
+              {lead.latest_stage ? tStage(lead.latest_stage as "valid" | "consult" | "invite_trial" | "trial") : "—"}
             </span>
+
+            {/* Contact count + quick add */}
+            <div className="flex items-center gap-1">
+              <span className="text-sm text-muted">{lead.contact_count}</span>
+              <QuickContactModal
+                leadId={lead.id}
+                leadName={lead.name}
+                channels={channelOptions}
+                results={resultOptions}
+                labels={contactLabels}
+              />
+            </div>
 
             {/* Detail link */}
             <Link

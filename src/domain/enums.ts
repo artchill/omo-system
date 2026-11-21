@@ -9,6 +9,8 @@ export const CONTACT_CHANNELS = [
   "phone",
   "sms",
   "email",
+  "zoom",
+  "google_meet",
   "in_person",
   "other",
 ] as const;
@@ -21,6 +23,7 @@ export const CONTACT_RESULTS = [
   "wrong_number",
   "callback",
   "left_message",
+  "inquiry",
   "other",
 ] as const;
 export type ContactResult = (typeof CONTACT_RESULTS)[number];

@@ -138,6 +138,7 @@
     "expectedDepart": "Expected departure",
     "expectedWeeks": "Expected weeks",
     "nextContact": "Next contact",
+    "contactInfo": "Contact info",
     "detail": "Lead details",
     "contacts": "Contact log",
     "stages": "Stages",
@@ -165,7 +166,9 @@
     "result": "Result",
     "note": "Notes",
     "loggedAt": "Logged at",
-    "by": "By"
+    "by": "By",
+    "loggedTime": "Contact time",
+    "notePlaceholder": "Please leave the result of this contact."
   },
   "Channel": {
     "line": "LINE",
@@ -173,7 +176,9 @@
     "sms": "SMS",
     "email": "Email",
     "in_person": "In person",
-    "other": "Other"
+    "other": "Other",
+    "zoom": "Zoom",
+    "google_meet": "Google Meet"
   },
   "ContactResult": {
     "connected": "Connected",
@@ -181,7 +186,8 @@
     "wrong_number": "Wrong number",
     "callback": "Callback requested",
     "left_message": "Left message",
-    "other": "Other"
+    "other": "Other",
+    "inquiry": "Inquiry"
   },
   "AgeGroup": {
     "under_10": "Under 10",

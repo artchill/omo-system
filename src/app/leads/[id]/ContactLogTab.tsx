@@ -57,7 +57,7 @@ export function ContactLogTab({ leadId, logs, channels, results, labels }: Props
           {error && <p className="text-sm text-bad">{error}</p>}
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block">
-              <span className="mb-1 block text-xs text-muted">{labels.channel} *</span>
+              <span className="mb-1 block text-xs text-muted">{labels.channel}</span>
               <select name="channel" required className="field w-full">
                 <option value="">—</option>
                 {channels.map((c) => (
@@ -66,8 +66,8 @@ export function ContactLogTab({ leadId, logs, channels, results, labels }: Props
               </select>
             </label>
             <label className="block">
-              <span className="mb-1 block text-xs text-muted">{labels.result} *</span>
-              <select name="result" required className="field w-full">
+              <span className="mb-1 block text-xs text-muted">{labels.result}</span>
+              <select name="result" className="field w-full">
                 <option value="">—</option>
                 {results.map((r) => (
                   <option key={r.value} value={r.value}>{r.label}</option>
@@ -76,8 +76,12 @@ export function ContactLogTab({ leadId, logs, channels, results, labels }: Props
             </label>
           </div>
           <label className="block">
+            <span className="mb-1 block text-xs text-muted">{labels.loggedTime}</span>
+            <input type="datetime-local" name="logged_time" className="field w-full" />
+          </label>
+          <label className="block">
             <span className="mb-1 block text-xs text-muted">{labels.note}</span>
-            <textarea name="note" rows={2} className="field w-full" />
+            <textarea name="note" rows={2} className="field w-full" placeholder={labels.notePlaceholder} />
           </label>
           <div className="flex justify-end gap-3 border-t border-edge pt-4">
             <button type="button" className="btn btn-ghost" onClick={() => setOpen(false)}>

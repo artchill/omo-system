@@ -187,13 +187,22 @@ export async function addContactLogAction(fd: FormData) {
   const channel = cleanText(fd.get("channel"), 20);
   const result = cleanText(fd.get("result"), 20);
   const note = cleanText(fd.get("note"), 1000);
+  const loggedTime = cleanText(fd.get("logged_time"), 30);
 
   if (!CONTACT_CHANNELS.includes(channel as typeof CONTACT_CHANNELS[number]))
     return { error: "generic" as const };
-  if (!CONTACT_RESULTS.includes(result as typeof CONTACT_RESULTS[number]))
+  // Result is optional — validate only when provided
+  if (result && !CONTACT_RESULTS.includes(result as typeof CONTACT_RESULTS[number]))
     return { error: "generic" as const };
 
-  insertContactLog({ lead_id: leadId, user_id: user.id, channel, result, note });
+  insertContactLog({
+    lead_id: leadId,
+    user_id: user.id,
+    channel,
+    result: result || "",
+    note,
+    logged_at: loggedTime || undefined,
+  });
   insertAuditLog({
     user_id: user.id,
     lead_id: leadId,

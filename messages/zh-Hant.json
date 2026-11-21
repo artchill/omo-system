@@ -138,6 +138,7 @@
     "expectedDepart": "預計出發日",
     "expectedWeeks": "預計週數",
     "nextContact": "下次聯繫日",
+    "contactInfo": "聯繫方式",
     "detail": "名單詳情",
     "contacts": "聯繫紀錄",
     "stages": "階段紀錄",
@@ -165,7 +166,9 @@
     "result": "結果",
     "note": "備註",
     "loggedAt": "聯繫時間",
-    "by": "紀錄人"
+    "by": "紀錄人",
+    "loggedTime": "聯繫時間",
+    "notePlaceholder": "請留下本次聯繫的結果。"
   },
   "Channel": {
     "line": "LINE",
@@ -173,7 +176,9 @@
     "sms": "簡訊",
     "email": "Email",
     "in_person": "當面",
-    "other": "其他"
+    "other": "其他",
+    "zoom": "Zoom",
+    "google_meet": "Google Meet"
   },
   "ContactResult": {
     "connected": "已接通",
@@ -181,7 +186,8 @@
     "wrong_number": "空號",
     "callback": "約回電",
     "left_message": "已留言",
-    "other": "其他"
+    "other": "其他",
+    "inquiry": "詢問中"
   },
   "AgeGroup": {
     "under_10": "10 歲以下",

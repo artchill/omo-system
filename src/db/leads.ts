@@ -34,6 +34,7 @@ export type LeadListRow = LeadRow & {
   assistant_name: string | null;
   sales_name: string | null;
   contact_count: number;
+  latest_stage: string | null;
 };
 
 const now = () => new Date().toISOString();
@@ -101,7 +102,8 @@ export function listLeads(filter: LeadListFilter = {}): {
               s.name AS source_name,
               ua.name AS assistant_name,
               us.name AS sales_name,
-              (SELECT COUNT(*) FROM contact_logs cl WHERE cl.lead_id = l.id) AS contact_count
+              (SELECT COUNT(*) FROM contact_logs cl WHERE cl.lead_id = l.id) AS contact_count,
+              (SELECT se.stage FROM stage_events se WHERE se.lead_id = l.id ORDER BY se.event_date DESC LIMIT 1) AS latest_stage
        FROM leads l
        LEFT JOIN sources s  ON s.id  = l.source_id
        LEFT JOIN users   ua ON ua.id = l.assistant_id
@@ -122,7 +124,8 @@ export function findLeadById(id: number): LeadListRow | undefined {
               s.name AS source_name,
               ua.name AS assistant_name,
               us.name AS sales_name,
-              (SELECT COUNT(*) FROM contact_logs cl WHERE cl.lead_id = l.id) AS contact_count
+              (SELECT COUNT(*) FROM contact_logs cl WHERE cl.lead_id = l.id) AS contact_count,
+              (SELECT se.stage FROM stage_events se WHERE se.lead_id = l.id ORDER BY se.event_date DESC LIMIT 1) AS latest_stage
        FROM leads l
        LEFT JOIN sources s  ON s.id  = l.source_id
        LEFT JOIN users   ua ON ua.id = l.assistant_id

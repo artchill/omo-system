@@ -43,7 +43,7 @@ export default async function LeadDetailPage({ params }: PageProps) {
   if (!lead) return notFound();
 
   const [
-    t, tc, ts, tCh, tCr, tSt, tCi, tD, tAg, tNeed, tStType, tPlan, tCampus, tErr,
+    t, tc, ts, tCh, tCr, tSt, tCi, tD, tAg, tNeed, tStType, tPlan, tCampus, tErr, tCl,
   ] = await Promise.all([
     getTranslations("Leads"),
     getTranslations("Common"),
@@ -59,6 +59,7 @@ export default async function LeadDetailPage({ params }: PageProps) {
     getTranslations("Plan"),
     getTranslations("Campus"),
     getTranslations("Errors"),
+    getTranslations("ContactLog"),
   ]);
 
   const contactLogs = listContactLogs(id);
@@ -117,11 +118,13 @@ export default async function LeadDetailPage({ params }: PageProps) {
   // Contact log labels
   const contactLabels: Record<string, string> = {
     title: t("contacts"),
-    add: "+" /* ContactLog.add */,
-    channel: tCh("line") ? "Channel" : "Channel",
-    result: "Result",
-    note: t("note"),
-    by: "—",
+    add: tCl("add"),
+    channel: tCl("channel"),
+    result: tCl("result"),
+    note: tCl("note"),
+    by: tCl("by"),
+    loggedTime: tCl("loggedTime"),
+    notePlaceholder: tCl("notePlaceholder"),
     save: tc("save"),
     cancel: tc("cancel"),
     noData: tc("noData"),

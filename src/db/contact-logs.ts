@@ -30,13 +30,14 @@ export function insertContactLog(log: {
   channel: string;
   result: string;
   note: string;
+  logged_at?: string;
 }): number {
   const r = db()
     .prepare(
       `INSERT INTO contact_logs (lead_id, user_id, channel, result, note, logged_at)
        VALUES (?, ?, ?, ?, ?, ?)`,
     )
-    .run(log.lead_id, log.user_id, log.channel, log.result, log.note, new Date().toISOString());
+    .run(log.lead_id, log.user_id, log.channel, log.result, log.note, log.logged_at || new Date().toISOString());
   return Number(r.lastInsertRowid);
 }
 
