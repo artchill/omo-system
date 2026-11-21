@@ -37,67 +37,68 @@ export function LeadFilters({ statuses, sources, assistants, labels }: Props) {
   );
 
   return (
-    <div className="mb-6 flex flex-wrap items-end gap-3">
+    <div className="space-y-3">
       {/* Search */}
-      <div className="min-w-[180px] flex-1">
-        <input
-          type="search"
-          placeholder={labels.search + "…"}
-          defaultValue={searchParams.get("q") ?? ""}
-          className="field w-full"
-          onChange={(e) => {
-            clearTimeout((window as unknown as Record<string, ReturnType<typeof setTimeout>>).__leadSearch);
-            (window as unknown as Record<string, ReturnType<typeof setTimeout>>).__leadSearch = setTimeout(
-              () => update("q", e.target.value),
-              350,
-            );
-          }}
-        />
-      </div>
+      <input
+        type="search"
+        placeholder={labels.search + "…"}
+        defaultValue={searchParams.get("q") ?? ""}
+        className="field w-full"
+        onChange={(e) => {
+          clearTimeout((window as unknown as Record<string, ReturnType<typeof setTimeout>>).__leadSearch);
+          (window as unknown as Record<string, ReturnType<typeof setTimeout>>).__leadSearch = setTimeout(
+            () => update("q", e.target.value),
+            350,
+          );
+        }}
+      />
 
-      {/* Status filter */}
-      <select
-        className="field"
-        value={searchParams.get("status") ?? ""}
-        onChange={(e) => update("status", e.target.value)}
-      >
-        <option value="">{labels.all} {labels.status.toLowerCase()}</option>
-        {statuses.map((s) => (
-          <option key={s.value} value={s.value}>
-            {s.label}
-          </option>
-        ))}
-      </select>
-
-      {/* Source filter */}
-      <select
-        className="field"
-        value={searchParams.get("source") ?? ""}
-        onChange={(e) => update("source", e.target.value)}
-      >
-        <option value="">{labels.all} {labels.source.toLowerCase()}</option>
-        {sources.map((s) => (
-          <option key={s.value} value={s.value}>
-            {s.label}
-          </option>
-        ))}
-      </select>
-
-      {/* Assistant filter */}
-      {assistants.length > 0 && (
+      {/* Filter row */}
+      <div className="grid gap-3 sm:grid-cols-3">
+        {/* Status filter */}
         <select
-          className="field"
-          value={searchParams.get("assistant") ?? ""}
-          onChange={(e) => update("assistant", e.target.value)}
+          className="field w-full"
+          value={searchParams.get("status") ?? ""}
+          onChange={(e) => update("status", e.target.value)}
         >
-          <option value="">{labels.all} {labels.assistant.toLowerCase()}</option>
-          {assistants.map((a) => (
-            <option key={a.value} value={a.value}>
-              {a.label}
+          <option value="">{labels.all} {labels.status.toLowerCase()}</option>
+          {statuses.map((s) => (
+            <option key={s.value} value={s.value}>
+              {s.label}
             </option>
           ))}
         </select>
-      )}
+
+        {/* Source filter */}
+        <select
+          className="field w-full"
+          value={searchParams.get("source") ?? ""}
+          onChange={(e) => update("source", e.target.value)}
+        >
+          <option value="">{labels.all} {labels.source.toLowerCase()}</option>
+          {sources.map((s) => (
+            <option key={s.value} value={s.value}>
+              {s.label}
+            </option>
+          ))}
+        </select>
+
+        {/* Assistant filter */}
+        {assistants.length > 0 && (
+          <select
+            className="field w-full"
+            value={searchParams.get("assistant") ?? ""}
+            onChange={(e) => update("assistant", e.target.value)}
+          >
+            <option value="">{labels.all} {labels.assistant.toLowerCase()}</option>
+            {assistants.map((a) => (
+              <option key={a.value} value={a.value}>
+                {a.label}
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
     </div>
   );
 }
