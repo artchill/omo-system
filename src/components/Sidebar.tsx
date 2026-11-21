@@ -62,19 +62,19 @@ export function Sidebar({ items, user, labels, logoutAction, langSwitcher }: Sid
           </span>
         </Link>
 
-        {/* Collapse button */}
+        {/* Collapse button — positioned half-outside the sidebar */}
         <button
           onClick={toggle}
           aria-expanded={!collapsed}
           aria-label={collapsed ? labels.expand : labels.collapse}
           aria-keyshortcuts="Meta+B"
-          className="absolute -right-3 top-6 grid size-6 place-items-center rounded-full border border-edge bg-[#0c1424] text-muted transition-colors hover:bg-white/10 hover:text-foreground"
+          className="absolute -right-3.5 top-7 z-10 grid size-7 place-items-center rounded-full border border-white/20 bg-[#141c2e] text-blue-300 shadow-lg shadow-black/40 transition-all hover:border-blue-400/50 hover:bg-[#1a2540] hover:text-blue-200 hover:shadow-blue-500/20"
         >
           <svg
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            strokeWidth="2"
+            strokeWidth="2.5"
             strokeLinecap="round"
             strokeLinejoin="round"
             className="size-3.5 transition-transform duration-300"
