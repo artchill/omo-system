@@ -32,7 +32,7 @@ const now = () => new Date().toISOString();
 
 export function listDeals(limit = 50, offset = 0): { rows: DealRow[]; total: number } {
   const total = Number(
-    db().prepare("SELECT COUNT(*) AS n FROM deals").get()?.n ?? 0,
+    (db().prepare("SELECT COUNT(*) AS n FROM deals").get() as { n: number } | undefined)?.n ?? 0,
   );
   const rows = db()
     .prepare(

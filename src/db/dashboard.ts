@@ -30,36 +30,38 @@ export function getDashboardMetrics(opts?: {
     return { clause: parts.length ? `WHERE ${parts.join(" AND ")}` : "", params };
   };
 
+  type N = { n: number };
+
   const leads = dateFilter("created_at");
   const totalLeads = Number(
-    d.prepare(`SELECT COUNT(*) AS n FROM leads ${leads.clause}`).get(...leads.params)?.n ?? 0,
+    (d.prepare(`SELECT COUNT(*) AS n FROM leads ${leads.clause}`).get(...leads.params) as N | undefined)?.n ?? 0,
   );
 
   const newLeads = Number(
-    d.prepare(`SELECT COUNT(*) AS n FROM leads ${leads.clause ? leads.clause + " AND" : "WHERE"} status = 'new'`).get(...leads.params)?.n ?? 0,
+    (d.prepare(`SELECT COUNT(*) AS n FROM leads ${leads.clause ? leads.clause + " AND" : "WHERE"} status = 'new'`).get(...leads.params) as N | undefined)?.n ?? 0,
   );
 
   /* "valid" = had at least one contact log with result = "interested" or status in open group beyond 'new' */
   const validLeads = Number(
-    d.prepare(
+    (d.prepare(
       `SELECT COUNT(DISTINCT l.id) AS n FROM leads l WHERE l.status NOT IN ('new','invalid','duplicate','spam','no_answer','not_interested')${from ? " AND l.created_at >= ?" : ""}${to ? " AND l.created_at <= ?" : ""}`,
-    ).get(...leads.params)?.n ?? 0,
+    ).get(...leads.params) as N | undefined)?.n ?? 0,
   );
 
   const ci = dateFilter("invited_at");
   const consultInvites = Number(
-    d.prepare(`SELECT COUNT(*) AS n FROM consult_invites ${ci.clause}`).get(...ci.params)?.n ?? 0,
+    (d.prepare(`SELECT COUNT(*) AS n FROM consult_invites ${ci.clause}`).get(...ci.params) as N | undefined)?.n ?? 0,
   );
   const attended = Number(
-    d.prepare(`SELECT COUNT(*) AS n FROM consult_invites ${ci.clause ? ci.clause + " AND" : "WHERE"} attendance = 'attended'`).get(...ci.params)?.n ?? 0,
+    (d.prepare(`SELECT COUNT(*) AS n FROM consult_invites ${ci.clause ? ci.clause + " AND" : "WHERE"} attendance = 'attended'`).get(...ci.params) as N | undefined)?.n ?? 0,
   );
   const absent = Number(
-    d.prepare(`SELECT COUNT(*) AS n FROM consult_invites ${ci.clause ? ci.clause + " AND" : "WHERE"} attendance = 'absent'`).get(...ci.params)?.n ?? 0,
+    (d.prepare(`SELECT COUNT(*) AS n FROM consult_invites ${ci.clause ? ci.clause + " AND" : "WHERE"} attendance = 'absent'`).get(...ci.params) as N | undefined)?.n ?? 0,
   );
 
   const dl = dateFilter("deal_date");
   const deals = Number(
-    d.prepare(`SELECT COUNT(*) AS n FROM deals ${dl.clause}`).get(...dl.params)?.n ?? 0,
+    (d.prepare(`SELECT COUNT(*) AS n FROM deals ${dl.clause}`).get(...dl.params) as N | undefined)?.n ?? 0,
   );
   const amounts = d.prepare(
     `SELECT COALESCE(SUM(quote_usd), 0) AS total, COALESCE(SUM(net_usd), 0) AS net FROM deals ${dl.clause}`,

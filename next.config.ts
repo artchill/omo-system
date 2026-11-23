@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
   // signed in), so there is no static shell to optimise. cacheComponents and
   // partialPrefetching from the starter template are deliberately left off to
   // keep behaviour simple and the Cloudflare adapters' job easier.
+  serverExternalPackages: ["better-sqlite3"],
   turbopack: {
     rules: {
       "*.css": {

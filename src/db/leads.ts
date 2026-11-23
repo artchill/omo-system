@@ -41,7 +41,7 @@ const now = () => new Date().toISOString();
 
 export function countLeads(): number {
   return Number(
-    db().prepare("SELECT COUNT(*) AS n FROM leads WHERE archived_at IS NULL").get()?.n ?? 0,
+    (db().prepare("SELECT COUNT(*) AS n FROM leads WHERE archived_at IS NULL").get() as { n: number } | undefined)?.n ?? 0,
   );
 }
 

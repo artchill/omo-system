@@ -1,30 +1,31 @@
 import "server-only";
 import { mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import { DatabaseSync } from "node:sqlite";
+import Database from "better-sqlite3";
+import type BetterSqlite3 from "better-sqlite3";
 import { MIGRATIONS } from "./migrations";
 
 // One connection per server process. Kept on globalThis so dev hot-reload
 // doesn't open a new connection on every edit.
-const g = globalThis as unknown as { __omoDb?: DatabaseSync };
+const g = globalThis as unknown as { __omoDb?: BetterSqlite3.Database };
 
-export function db(): DatabaseSync {
+export function db(): BetterSqlite3.Database {
   g.__omoDb ??= open();
   return g.__omoDb;
 }
 
-function open(): DatabaseSync {
+function open(): BetterSqlite3.Database {
   const file = resolve(process.env.DATABASE_PATH ?? "data/omo.db");
   mkdirSync(dirname(file), { recursive: true });
-  const database = new DatabaseSync(file);
-  database.exec(
-    "PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON; PRAGMA busy_timeout = 5000;",
-  );
+  const database = new Database(file);
+  database.pragma("journal_mode = WAL");
+  database.pragma("foreign_keys = ON");
+  database.pragma("busy_timeout = 5000");
   migrate(database);
   return database;
 }
 
-function migrate(database: DatabaseSync) {
+function migrate(database: BetterSqlite3.Database) {
   database.exec(
     "CREATE TABLE IF NOT EXISTS schema_migrations (id INTEGER PRIMARY KEY, applied_at TEXT NOT NULL)",
   );
@@ -32,7 +33,7 @@ function migrate(database: DatabaseSync) {
     database
       .prepare("SELECT id FROM schema_migrations")
       .all()
-      .map((row) => Number(row.id)),
+      .map((row) => Number((row as { id: number }).id)),
   );
   for (const m of MIGRATIONS) {
     if (done.has(m.id)) continue;

@@ -17,15 +17,14 @@ export type UserRow = {
 const now = () => new Date().toISOString();
 
 export function countUsers(): number {
-  return Number(db().prepare("SELECT COUNT(*) AS n FROM users").get()?.n ?? 0);
+  return Number((db().prepare("SELECT COUNT(*) AS n FROM users").get() as { n: number } | undefined)?.n ?? 0);
 }
 
 export function countActiveAdmins(): number {
-  return Number(
-    db()
-      .prepare("SELECT COUNT(*) AS n FROM users WHERE role = 'admin' AND active = 1")
-      .get()?.n ?? 0,
-  );
+  const row = db()
+    .prepare("SELECT COUNT(*) AS n FROM users WHERE role = 'admin' AND active = 1")
+    .get() as { n: number } | undefined;
+  return Number(row?.n ?? 0);
 }
 
 export function findUserByEmail(email: string): UserRow | undefined {

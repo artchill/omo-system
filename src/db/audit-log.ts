@@ -62,9 +62,9 @@ export function listAuditLogs(filter: AuditLogFilter = {}): {
   const whereClause = where.length ? `WHERE ${where.join(" AND ")}` : "";
 
   const total = Number(
-    db()
+    (db()
       .prepare(`SELECT COUNT(*) AS n FROM audit_log a ${whereClause}`)
-      .get(...params)?.n ?? 0,
+      .get(...params) as { n: number } | undefined)?.n ?? 0,
   );
 
   const limit = filter.limit ?? 50;

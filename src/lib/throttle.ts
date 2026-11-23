@@ -8,7 +8,7 @@ export function tooManyFailures(email: string): boolean {
   const since = new Date(Date.now() - WINDOW_MS).toISOString();
   const row = db()
     .prepare("SELECT COUNT(*) AS n FROM login_failures WHERE email = ? AND at > ?")
-    .get(email, since);
+    .get(email, since) as { n: number } | undefined;
   return Number(row?.n ?? 0) >= MAX_FAILURES;
 }
 

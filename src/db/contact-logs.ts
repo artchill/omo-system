@@ -42,9 +42,8 @@ export function insertContactLog(log: {
 }
 
 export function countContactLogs(leadId: number): number {
-  return Number(
-    db()
-      .prepare("SELECT COUNT(*) AS n FROM contact_logs WHERE lead_id = ?")
-      .get(leadId)?.n ?? 0,
-  );
+  const row = db()
+    .prepare("SELECT COUNT(*) AS n FROM contact_logs WHERE lead_id = ?")
+    .get(leadId) as { n: number } | undefined;
+  return Number(row?.n ?? 0);
 }
