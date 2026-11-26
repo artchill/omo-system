@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useLocale } from "next-intl";
 import { Modal } from "@/components/Modal";
 import { addContactLogAction } from "../actions";
 import { formatDateTime } from "@/lib/format";
@@ -25,6 +26,7 @@ interface Props {
 }
 
 export function ContactLogTab({ leadId, logs, channels, results, labels }: Props) {
+  const locale = useLocale();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -115,7 +117,7 @@ export function ContactLogTab({ leadId, logs, channels, results, labels }: Props
                 )}
               </div>
               <span className="shrink-0 whitespace-nowrap text-xs tabular-nums text-muted">
-                {formatDateTime(log.logged_at)}
+                {formatDateTime(log.logged_at, locale)}
               </span>
             </div>
           ))}

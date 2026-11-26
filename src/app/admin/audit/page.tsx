@@ -1,4 +1,4 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { requirePermission } from "@/lib/auth";
 import { listAuditLogs } from "@/db/audit-log";
 import { Shell } from "@/components/Header";
@@ -14,9 +14,10 @@ export default async function AuditLogPage(props: {
 }) {
   await requirePermission("audit.view");
   const sp = await props.searchParams;
-  const [t, tc] = await Promise.all([
+  const [t, tc, locale] = await Promise.all([
     getTranslations("AuditLog"),
     getTranslations("Common"),
+    getLocale(),
   ]);
 
   const entity = typeof sp.entity === "string" ? sp.entity : undefined;
@@ -126,7 +127,7 @@ export default async function AuditLogPage(props: {
                 )}
               </span>
               <span className="whitespace-nowrap text-xs tabular-nums text-muted">
-                {formatDateTime(log.at)}
+                {formatDateTime(log.at, locale)}
               </span>
             </div>
           );

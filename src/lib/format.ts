@@ -7,42 +7,36 @@
  * mismatch. Pinning also keeps dates right once the app runs on a server
  * outside Taiwan — "today" for the team is Taipei's today, not the server's.
  *
- * Display format is YYYY-MM-DD [HH:mm], which matches the dates stored in the
- * database and reads the same in English and Chinese.
+ * Two families of function, deliberately separate:
+ *   - toISODate / todayISO  → YYYY-MM-DD for <input type="date"> and the DB
+ *   - formatDateTime / formatDate → text for people to read, in their locale
  */
 export const APP_TIME_ZONE = "Asia/Taipei";
 
 type DateInput = string | number | Date | null | undefined;
 
-function parts(value: DateInput): Record<string, string> {
-  if (value === null || value === undefined || value === "") return {};
+function toDate(value: DateInput): Date | null {
+  if (value === null || value === undefined || value === "") return null;
   const d = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(d.getTime())) return {};
+  return Number.isNaN(d.getTime()) ? null : d;
+}
 
+function partsOf(d: Date, options: Intl.DateTimeFormatOptions, locale?: string) {
   const out: Record<string, string> = {};
-  const formatter = new Intl.DateTimeFormat("en-CA", {
+  const formatter = new Intl.DateTimeFormat(locale ?? "en-CA", {
     timeZone: APP_TIME_ZONE,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hourCycle: "h23",
+    ...options,
   });
   for (const p of formatter.formatToParts(d)) out[p.type] = p.value;
   return out;
 }
 
-/** "2026-12-01", or the fallback when the value is missing or unparseable. */
-export function formatDate(value: DateInput, fallback = "—"): string {
-  const p = parts(value);
-  return p.year ? `${p.year}-${p.month}-${p.day}` : fallback;
-}
-
-/** "2026-12-01 14:30", or the fallback when the value is missing or unparseable. */
-export function formatDateTime(value: DateInput, fallback = "—"): string {
-  const p = parts(value);
-  return p.year ? `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute}` : fallback;
+/** "2026-12-01" — the machine format, for date inputs and database columns. */
+export function toISODate(value: DateInput, fallback = ""): string {
+  const d = toDate(value);
+  if (!d) return fallback;
+  const p = partsOf(d, { year: "numeric", month: "2-digit", day: "2-digit" });
+  return `${p.year}-${p.month}-${p.day}`;
 }
 
 /**
@@ -51,5 +45,53 @@ export function formatDateTime(value: DateInput, fallback = "—"): string {
  * yesterday for anyone working in Taipei before 08:00.
  */
 export function todayISO(): string {
-  return formatDate(new Date(), "");
+  return toISODate(new Date());
+}
+
+/**
+ * A timestamp as people read it, in their own locale:
+ *   en      → "November 27, 2026 at 12:30:45 AM"
+ *   zh-Hant → "2026年11月27日 上午12:30:45"
+ *
+ * Pass the locale from `useLocale()` in a client component or `getLocale()`
+ * on the server. It is required rather than defaulted so a call site cannot
+ * quietly render Chinese text inside the English UI.
+ */
+export function formatDateTime(
+  value: DateInput,
+  locale: string,
+  fallback = "—",
+): string {
+  const d = toDate(value);
+  if (!d) return fallback;
+  return new Intl.DateTimeFormat(locale, {
+    timeZone: APP_TIME_ZONE,
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  }).format(d);
+}
+
+/**
+ * The same, without the time:
+ *   en      → "November 27, 2026"
+ *   zh-Hant → "2026年11月27日"
+ */
+export function formatDate(
+  value: DateInput,
+  locale: string,
+  fallback = "—",
+): string {
+  const d = toDate(value);
+  if (!d) return fallback;
+  return new Intl.DateTimeFormat(locale, {
+    timeZone: APP_TIME_ZONE,
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  }).format(d);
 }

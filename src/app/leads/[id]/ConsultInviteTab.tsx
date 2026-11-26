@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useLocale } from "next-intl";
 import { Modal } from "@/components/Modal";
 import { addConsultInviteAction, updateAttendanceAction } from "../actions";
 import { formatDateTime } from "@/lib/format";
@@ -21,6 +22,7 @@ interface Props {
 }
 
 export function ConsultInviteTab({ leadId, invites, labels }: Props) {
+  const locale = useLocale();
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -78,7 +80,7 @@ export function ConsultInviteTab({ leadId, invites, labels }: Props) {
               <div className="flex flex-wrap items-center gap-3">
                 <span className="text-sm tabular-nums">
                   {inv.scheduled_at
-                    ? formatDateTime(inv.scheduled_at)
+                    ? formatDateTime(inv.scheduled_at, locale)
                     : labels.noSchedule}
                 </span>
                 <span className="text-xs text-muted">{labels.by} {inv.inviter_name}</span>
