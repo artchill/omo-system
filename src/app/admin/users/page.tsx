@@ -129,53 +129,106 @@ export default async function UsersPage({
         />
       </div>
 
-      {/* ── User table ── */}
-      <div className="glass overflow-hidden">
-        {/* Column headers — hidden on mobile */}
-        <div className="hidden sm:grid sm:grid-cols-[minmax(10rem,3fr)_minmax(6rem,1fr)_minmax(5rem,1fr)_auto] items-center gap-4 border-b border-edge px-5 py-3 text-xs font-medium text-muted uppercase tracking-wider">
-          <span>{t("name")}</span>
-          <span className="whitespace-nowrap">{t("role")}</span>
-          <span className="whitespace-nowrap">{t("active")}</span>
-          <span className="whitespace-nowrap text-right">{t("edit")}</span>
-        </div>
+      {/*
+        ── User table (sm and up) ──
+        A real table so the header and the rows share one column model. Two
+        separate CSS grids sized their last column to their own content — the
+        word "Edit" against an actual button — which left every column after
+        the first out of line with its heading.
+      */}
+      <div className="glass hidden overflow-hidden sm:block">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-edge text-left text-xs font-medium uppercase tracking-wider text-muted">
+              <th className="px-5 py-3">{t("name")}</th>
+              <th className="w-40 whitespace-nowrap px-4 py-3">{t("role")}</th>
+              <th className="w-36 whitespace-nowrap px-4 py-3">{t("active")}</th>
+              <th className="w-32 whitespace-nowrap px-5 py-3 text-right">
+                {t("edit")}
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-edge">
+            {users.map((u) => (
+              <tr
+                key={u.id}
+                className={`transition-colors hover:bg-white/[0.03] ${u.active === 1 ? "" : "opacity-50"}`}
+              >
+                <td className="max-w-0 px-5 py-4">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <Avatar name={u.name} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="truncate text-sm font-medium">{u.name}</span>
+                        {u.id === me.id && (
+                          <span className="shrink-0 text-[0.65rem] font-medium text-cyan-400">
+                            {t("you")}
+                          </span>
+                        )}
+                      </div>
+                      <div className="truncate text-xs text-muted">{u.email}</div>
+                    </div>
+                  </div>
+                </td>
+                <td className="px-4 py-4">
+                  <RoleBadge role={u.role} label={tr(u.role)} />
+                </td>
+                <td className="px-4 py-4">
+                  <StatusDot
+                    active={u.active === 1}
+                    label={u.active === 1 ? t("active") : t("inactive")}
+                  />
+                </td>
+                <td className="px-5 py-4 text-right">
+                  <EditUserModal
+                    user={{
+                      id: u.id,
+                      name: u.name,
+                      email: u.email,
+                      role: u.role,
+                      active: u.active,
+                    }}
+                    isSelf={u.id === me.id}
+                    labels={{
+                      edit: t("edit"),
+                      role: t("role"),
+                      active: t("active"),
+                      save: t("save"),
+                      cancel: t("cancel"),
+                      resetPassword: t("resetPassword"),
+                      password: t("passwordMin"),
+                    }}
+                    roles={roleOptions}
+                  />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-        {/* Rows */}
-        {users.map((u, i) => (
+      {/* ── User cards (below sm) ── */}
+      <div className="space-y-3 sm:hidden">
+        {users.map((u) => (
           <div
             key={u.id}
-            className={`grid grid-cols-1 sm:grid-cols-[minmax(10rem,3fr)_minmax(6rem,1fr)_minmax(5rem,1fr)_auto] items-center gap-x-4 gap-y-2 px-5 py-4 transition-colors hover:bg-white/[0.03] ${i > 0 ? "border-t border-edge/50" : ""} ${u.active === 1 ? "" : "opacity-50"}`}
+            className={`glass p-4 ${u.active === 1 ? "" : "opacity-50"}`}
           >
-            {/* Name + email */}
-            <div className="flex items-center gap-3 min-w-0">
-              <Avatar name={u.name} />
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium text-sm truncate">{u.name}</span>
-                  {u.id === me.id && (
-                    <span className="shrink-0 text-[0.65rem] text-cyan-400 font-medium">
-                      {t("you")}
-                    </span>
-                  )}
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3">
+                <Avatar name={u.name} />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="truncate text-sm font-medium">{u.name}</span>
+                    {u.id === me.id && (
+                      <span className="shrink-0 text-[0.65rem] font-medium text-cyan-400">
+                        {t("you")}
+                      </span>
+                    )}
+                  </div>
+                  <div className="truncate text-xs text-muted">{u.email}</div>
                 </div>
-                <div className="text-xs text-muted truncate">{u.email}</div>
               </div>
-            </div>
-
-            {/* Role badge */}
-            <div className="sm:justify-self-start">
-              <RoleBadge role={u.role} label={tr(u.role)} />
-            </div>
-
-            {/* Status */}
-            <div>
-              <StatusDot
-                active={u.active === 1}
-                label={u.active === 1 ? t("active") : t("inactive")}
-              />
-            </div>
-
-            {/* Edit button */}
-            <div className="sm:justify-self-end">
               <EditUserModal
                 user={{
                   id: u.id,
@@ -195,6 +248,13 @@ export default async function UsersPage({
                   password: t("passwordMin"),
                 }}
                 roles={roleOptions}
+              />
+            </div>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <RoleBadge role={u.role} label={tr(u.role)} />
+              <StatusDot
+                active={u.active === 1}
+                label={u.active === 1 ? t("active") : t("inactive")}
               />
             </div>
           </div>

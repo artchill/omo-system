@@ -9,6 +9,33 @@ type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 const PAGE_SIZE = 50;
 
+/** The changed fields of one entry, shown the same way on desktop and phone. */
+function ChangeList({ entries }: { entries: [string, unknown][] }) {
+  if (entries.length === 0) return <>—</>;
+  return (
+    <div className="flex flex-wrap gap-1">
+      {entries.slice(0, 5).map(([field, val]) => {
+        const arr = Array.isArray(val) ? val : [null, val];
+        return (
+          <span key={field} className="inline-block rounded bg-white/5 px-1.5 py-0.5">
+            <span className="font-medium">{field}:</span>{" "}
+            {arr[0] ? (
+              <>
+                <span className="line-through opacity-50">{String(arr[0])}</span>
+                {" → "}
+              </>
+            ) : null}
+            {String(arr[1] ?? "")}
+          </span>
+        );
+      })}
+      {entries.length > 5 && (
+        <span className="opacity-50">+{entries.length - 5}</span>
+      )}
+    </div>
+  );
+}
+
 export default async function AuditLogPage(props: {
   searchParams: SearchParams;
 }) {
@@ -68,57 +95,42 @@ export default async function AuditLogPage(props: {
       </div>
 
       <div className="glass overflow-hidden">
-        {/* Header */}
-        <div className="hidden border-b border-edge px-5 py-3 text-xs font-medium uppercase tracking-wider text-muted md:grid md:grid-cols-[8rem_6rem_6rem_minmax(0,1fr)_6rem_auto] md:gap-x-4">
-          <span>{t("user")}</span>
-          <span>{t("entity")}</span>
-          <span>{t("action")}</span>
-          <span>{t("changes")}</span>
-          <span>{t("lead")}</span>
-          <span>{t("time")}</span>
-        </div>
+        {/*
+          A real table so the header and the rows share one column model.
+          As two separate grids the last column sized to each grid's own
+          content — the word "Time" against a full timestamp — so the
+          headings did not sit above the values they describe.
+        */}
+        <table className="hidden w-full text-sm md:table">
+          <thead>
+            <tr className="border-b border-edge text-left text-xs font-medium uppercase tracking-wider text-muted">
+              <th className="w-32 px-5 py-3">{t("user")}</th>
+              <th className="w-28 px-4 py-3">{t("entity")}</th>
+              <th className="w-28 px-4 py-3">{t("action")}</th>
+              <th className="px-4 py-3">{t("changes")}</th>
+              <th className="w-28 px-4 py-3">{t("lead")}</th>
+              <th className="w-56 whitespace-nowrap px-5 py-3">{t("time")}</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-edge">
 
         {rows.map((log) => {
           const changes = parseChanges(log.changes);
           const changeEntries = Object.entries(changes);
 
           return (
-            <div
-              key={log.id}
-              className="flex flex-col gap-1 border-b border-edge px-5 py-3 transition-colors hover:bg-white/[0.03] md:grid md:grid-cols-[8rem_6rem_6rem_minmax(0,1fr)_6rem_auto] md:gap-x-4 md:items-start"
-            >
-              <span className="text-sm font-medium">
+            <tr key={log.id} className="align-top transition-colors hover:bg-white/[0.03]">
+              <td className="px-5 py-3 text-sm font-medium">
                 {log.user_name ?? "—"}
-              </span>
-              <span className="chip w-fit text-xs">{log.entity}</span>
-              <span className="text-sm text-muted">{log.action}</span>
-              <div className="text-xs text-muted">
-                {changeEntries.length === 0 ? (
-                  "—"
-                ) : (
-                  <div className="flex flex-wrap gap-1">
-                    {changeEntries.slice(0, 5).map(([field, val]) => {
-                      const arr = Array.isArray(val) ? val : [null, val];
-                      return (
-                        <span key={field} className="inline-block rounded bg-white/5 px-1.5 py-0.5">
-                          <span className="font-medium">{field}:</span>{" "}
-                          {arr[0] ? (
-                            <>
-                              <span className="line-through opacity-50">{String(arr[0])}</span>
-                              {" → "}
-                            </>
-                          ) : null}
-                          {String(arr[1] ?? "")}
-                        </span>
-                      );
-                    })}
-                    {changeEntries.length > 5 && (
-                      <span className="opacity-50">+{changeEntries.length - 5}</span>
-                    )}
-                  </div>
-                )}
-              </div>
-              <span className="text-sm">
+              </td>
+              <td className="px-4 py-3">
+                <span className="chip w-fit whitespace-nowrap text-xs">{log.entity}</span>
+              </td>
+              <td className="px-4 py-3 text-sm text-muted">{log.action}</td>
+              <td className="px-4 py-3 text-xs text-muted">
+                <ChangeList entries={changeEntries} />
+              </td>
+              <td className="px-4 py-3 text-sm">
                 {log.lead_name ? (
                   <Link href={`/leads/${log.lead_id}`} className="text-accent hover:underline">
                     {log.lead_name}
@@ -126,13 +138,47 @@ export default async function AuditLogPage(props: {
                 ) : (
                   "—"
                 )}
-              </span>
-              <span className="whitespace-nowrap text-xs tabular-nums text-muted">
+              </td>
+              <td className="whitespace-nowrap px-5 py-3 text-xs tabular-nums text-muted">
                 {formatDateTime(log.at, locale)}
-              </span>
-            </div>
+              </td>
+            </tr>
           );
         })}
+          </tbody>
+        </table>
+
+        {/* ── Cards (below md) ── */}
+        <div className="divide-y divide-edge md:hidden">
+          {rows.map((log) => {
+            const entries = Object.entries(parseChanges(log.changes));
+            return (
+              <div key={log.id} className="space-y-2 px-5 py-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="chip whitespace-nowrap text-xs">{log.entity}</span>
+                  <span className="text-sm text-muted">{log.action}</span>
+                  <span className="ml-auto whitespace-nowrap text-xs tabular-nums text-muted">
+                    {formatDateTime(log.at, locale)}
+                  </span>
+                </div>
+                <div className="text-xs text-muted">
+                  <ChangeList entries={entries} />
+                </div>
+                <div className="flex flex-wrap items-center gap-x-4 text-sm">
+                  <span className="font-medium">{log.user_name ?? "—"}</span>
+                  {log.lead_name && (
+                    <Link
+                      href={`/leads/${log.lead_id}`}
+                      className="text-accent hover:underline"
+                    >
+                      {log.lead_name}
+                    </Link>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
 
         {rows.length === 0 && (
           <p className="px-5 py-8 text-center text-sm text-muted">
