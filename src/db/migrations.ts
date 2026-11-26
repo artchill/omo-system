@@ -248,4 +248,26 @@ export const MIGRATIONS: { id: number; sql: string }[] = [
         ('bonus_settlement_day',        '1');
     `,
   },
+  {
+    // 4 — lead entry time and consultation notes
+    id: 4,
+    sql: `
+      -- 進單時間: the clock time a lead reached us, beside the existing 進單日.
+      -- Kept separate from entry_date so imports can carry the real enquiry
+      -- time while existing rows stay valid with an empty time.
+      ALTER TABLE leads ADD COLUMN entry_time TEXT NOT NULL DEFAULT '';
+
+      -- 諮詢筆記: free-text notes staff add by hand on the lead page. Separate
+      -- from the 狀態紀錄 feed, which is built from events the system records.
+      CREATE TABLE lead_notes (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        lead_id    INTEGER NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
+        user_id    INTEGER NOT NULL REFERENCES users(id),
+        body       TEXT    NOT NULL,
+        created_at TEXT    NOT NULL,
+        updated_at TEXT    NOT NULL
+      );
+      CREATE INDEX lead_notes_lead ON lead_notes(lead_id, created_at);
+    `,
+  },
 ];

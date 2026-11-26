@@ -5,6 +5,8 @@ import type { LeadStatus } from "@/domain/lead-status";
 export type LeadRow = {
   id: number;
   entry_date: string;
+  /** Clock time the lead reached us, "HH:MM" or "" when unknown. */
+  entry_time: string;
   cycle_start: string | null;
   source_id: number | null;
   sub_source: string;
@@ -162,6 +164,7 @@ export type NewLead = {
   next_contact?: string;
   lead_note?: string;
   season?: string;
+  entry_time?: string;
 };
 
 export function insertLead(l: NewLead): number {
@@ -174,9 +177,9 @@ export function insertLead(l: NewLead): number {
         name, phone, email, line_id,
         age_group, need, student_type, note,
         expected_depart, expected_weeks, next_contact,
-        lead_note, season,
+        lead_note, season, entry_time,
         created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, 'pending_contact', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, 'pending_contact', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .run(
       l.entry_date,
@@ -198,6 +201,7 @@ export function insertLead(l: NewLead): number {
       l.next_contact ?? null,
       l.lead_note ?? "",
       l.season ?? "",
+      l.entry_time ?? "",
       t,
       t,
     );

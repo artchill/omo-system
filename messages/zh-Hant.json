@@ -206,12 +206,12 @@
     "over_30": "30 歲以上"
   },
   "LearningNeed": {
-    "language": "語言學習",
-    "academic": "學術課程",
-    "summer_camp": "暑期營",
-    "winter_camp": "冬令營",
-    "study_abroad": "留遊學",
-    "short_term": "短期課程",
+    "career_development": "職涯發展",
+    "parent_child": "親子遊學",
+    "exam_prep": "檢定備考",
+    "hobby": "興趣愛好",
+    "senior_study": "樂齡遊學",
+    "leisure_travel": "輕鬆度假",
     "other": "其他"
   },
   "StudentType": {

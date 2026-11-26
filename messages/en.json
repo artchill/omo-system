@@ -206,12 +206,12 @@
     "over_30": "Over 30"
   },
   "LearningNeed": {
-    "language": "Language learning",
-    "academic": "Academic",
-    "summer_camp": "Summer camp",
-    "winter_camp": "Winter camp",
-    "study_abroad": "Study abroad",
-    "short_term": "Short-term course",
+    "career_development": "Career development",
+    "parent_child": "Parent-child study trip",
+    "exam_prep": "Exam preparation",
+    "hobby": "Hobby and interest",
+    "senior_study": "Senior study trip",
+    "leisure_travel": "Leisure travel",
     "other": "Other"
   },
   "StudentType": {

@@ -41,13 +41,17 @@ export const AGE_GROUPS = [
 export type AgeGroup = (typeof AGE_GROUPS)[number];
 
 // ── Learning needs ────────────────────────────────────────────────
+/**
+ * 學習需求. Imported leads arrive carrying this, so the codes are stable and
+ * the labels live in messages/*.json.
+ */
 export const LEARNING_NEEDS = [
-  "language",
-  "academic",
-  "summer_camp",
-  "winter_camp",
-  "study_abroad",
-  "short_term",
+  "career_development",
+  "parent_child",
+  "exam_prep",
+  "hobby",
+  "senior_study",
+  "leisure_travel",
   "other",
 ] as const;
 export type LearningNeed = (typeof LEARNING_NEEDS)[number];
@@ -121,3 +125,19 @@ export type SourceGrade = (typeof SOURCE_GRADES)[number];
 // "" = unset, matches the DB CHECK constraint on leads.season
 export const SEASONS = ["peak", "off"] as const;
 export type Season = (typeof SEASONS)[number];
+
+/**
+ * Translate an option code, falling back to the stored value when it is not
+ * in the list. Option lists change (學習需求 was replaced once already) and
+ * imported rows can carry anything, so a page must not break on a code it
+ * does not recognise.
+ */
+export function optionLabel(
+  t: (key: string) => string,
+  allowed: readonly string[],
+  value: string | null | undefined,
+  fallback = "—",
+): string {
+  if (!value) return fallback;
+  return allowed.includes(value) ? t(value) : value;
+}
