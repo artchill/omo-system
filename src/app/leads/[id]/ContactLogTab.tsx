@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { Modal } from "@/components/Modal";
 import { addContactLogAction } from "../actions";
+import { formatDateTime } from "@/lib/format";
 
 type LogEntry = {
   id: number;
@@ -113,8 +114,8 @@ export function ContactLogTab({ leadId, logs, channels, results, labels }: Props
                   <p className="mt-1 text-sm text-muted">{log.note}</p>
                 )}
               </div>
-              <span className="shrink-0 text-xs text-muted">
-                {new Date(log.logged_at).toLocaleDateString()}
+              <span className="shrink-0 whitespace-nowrap text-xs tabular-nums text-muted">
+                {formatDateTime(log.logged_at)}
               </span>
             </div>
           ))}

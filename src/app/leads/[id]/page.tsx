@@ -28,6 +28,7 @@ import { StatusBadge } from "../StatusBadge";
 import { EditLeadModal } from "./EditLeadModal";
 import { DeleteLeadButton } from "./DeleteLeadButton";
 import { StatusChanger } from "./StatusChanger";
+import { StageChanger } from "./StageChanger";
 import { DetailTabs } from "./DetailTabs";
 import { ContactLogTab } from "./ContactLogTab";
 import { StageTab } from "./StageTab";
@@ -73,12 +74,24 @@ export default async function LeadDetailPage({ params }: PageProps) {
     label: s.name,
   }));
   const allUsers = listUsers();
-  const assistants = allUsers
-    .filter((u) => u.active && (u.role === "assistant" || u.role === "admin"))
-    .map((u) => ({ value: String(u.id), label: u.name }));
-  const salesUsers = allUsers
-    .filter((u) => u.active && (u.role === "sales" || u.role === "admin"))
-    .map((u) => ({ value: String(u.id), label: u.name }));
+  const tUsers = await getTranslations("Users");
+
+  /**
+   * Active users holding one of the roles, plus whoever is already assigned.
+   * Without that second part, assigning someone who is later deactivated or
+   * given a different role would drop them from the options, and the next save
+   * of any field on this lead would silently clear the assignment.
+   */
+  const pickable = (roles: string[], assignedId: number | null) =>
+    allUsers
+      .filter((u) => (u.active && roles.includes(u.role)) || u.id === assignedId)
+      .map((u) => ({
+        value: String(u.id),
+        label: u.active ? u.name : `${u.name} (${tUsers("inactive")})`,
+      }));
+
+  const assistants = pickable(["assistant", "admin"], lead.assistant_id);
+  const salesUsers = pickable(["sales", "admin"], lead.sales_id);
 
   const statusOptions = LEAD_STATUSES.map((s) => ({
     value: s,
@@ -90,6 +103,7 @@ export default async function LeadDetailPage({ params }: PageProps) {
     value: s,
     label: tStType(s),
   }));
+  const stageOptions = STAGE_TYPES.map((s) => ({ value: s, label: tSt(s) }));
 
   const editLabels: Record<string, string> = {
     edit: tc("edit"),
@@ -329,13 +343,26 @@ export default async function LeadDetailPage({ params }: PageProps) {
                   {lead.season === "peak" ? t("season.peak") : t("season.off")}
                 </span>
               )}
+              {lead.latest_stage && (
+                <span className="chip bg-accent/10 text-blue-300">
+                  {tSt(lead.latest_stage as typeof STAGE_TYPES[number])}
+                </span>
+              )}
               {can(user.role, "leads.edit") && (
-                <StatusChanger
-                  leadId={id}
-                  current={lead.status}
-                  statuses={statusOptions}
-                  label={t("status")}
-                />
+                <>
+                  <StatusChanger
+                    leadId={id}
+                    current={lead.status}
+                    statuses={statusOptions}
+                    label={t("status")}
+                  />
+                  <StageChanger
+                    leadId={id}
+                    current={lead.latest_stage}
+                    stages={stageOptions}
+                    label={tSt("label")}
+                  />
+                </>
               )}
             </div>
 

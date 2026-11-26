@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Modal } from "@/components/Modal";
+import { todayISO } from "@/lib/format";
 import { addStageEventAction } from "../actions";
 
 type StageEntry = {
@@ -65,7 +66,7 @@ export function StageTab({ leadId, stages, stageTypes, labels }: Props) {
               <input
                 name="event_date"
                 type="date"
-                defaultValue={new Date().toISOString().slice(0, 10)}
+                defaultValue={todayISO()}
                 className="field w-full"
               />
             </label>

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Modal } from "@/components/Modal";
+import { todayISO } from "@/lib/format";
 import { registerDealAction } from "../actions";
 
 type DealEntry = {
@@ -97,7 +98,7 @@ export function DealTab({
               <input
                 name="deal_date"
                 type="date"
-                defaultValue={new Date().toISOString().slice(0, 10)}
+                defaultValue={todayISO()}
                 className="field w-full"
               />
             </label>

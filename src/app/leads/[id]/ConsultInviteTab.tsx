@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { Modal } from "@/components/Modal";
 import { addConsultInviteAction, updateAttendanceAction } from "../actions";
+import { formatDateTime } from "@/lib/format";
 
 type InviteEntry = {
   id: number;
@@ -75,9 +76,9 @@ export function ConsultInviteTab({ leadId, invites, labels }: Props) {
           {invites.map((inv) => (
             <div key={inv.id} className="glass p-4">
               <div className="flex flex-wrap items-center gap-3">
-                <span className="text-sm">
+                <span className="text-sm tabular-nums">
                   {inv.scheduled_at
-                    ? new Date(inv.scheduled_at).toLocaleString()
+                    ? formatDateTime(inv.scheduled_at)
                     : labels.noSchedule}
                 </span>
                 <span className="text-xs text-muted">{labels.by} {inv.inviter_name}</span>

@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { requirePermission } from "@/lib/auth";
 import { listAuditLogs } from "@/db/audit-log";
 import { Shell } from "@/components/Header";
+import { formatDateTime } from "@/lib/format";
 import Link from "next/link";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -124,13 +125,8 @@ export default async function AuditLogPage(props: {
                   "—"
                 )}
               </span>
-              <span className="text-xs text-muted">
-                {new Date(log.at).toLocaleString("zh-Hant-TW", {
-                  month: "2-digit",
-                  day: "2-digit",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
+              <span className="whitespace-nowrap text-xs tabular-nums text-muted">
+                {formatDateTime(log.at)}
               </span>
             </div>
           );

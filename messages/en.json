@@ -229,7 +229,8 @@
     "trial": "Trial lesson",
     "add": "Add stage",
     "eventDate": "Event date",
-    "note": "Notes"
+    "note": "Notes",
+    "label": "Stage"
   },
   "ConsultInvite": {
     "add": "Add invite",

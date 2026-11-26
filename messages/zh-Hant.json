@@ -229,7 +229,8 @@
     "trial": "試聽",
     "add": "新增階段",
     "eventDate": "事件日期",
-    "note": "備註"
+    "note": "備註",
+    "label": "階段"
   },
   "ConsultInvite": {
     "add": "新增邀約",

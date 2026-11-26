@@ -20,6 +20,7 @@ import { insertDeal, type NewDeal } from "@/db/deals";
 import { getCommissionDefaults, isPeakSeason } from "@/db/settings";
 import { CONTACT_CHANNELS, CONTACT_RESULTS, STAGE_TYPES, ATTENDANCE_VALUES, SEASONS } from "@/domain/enums";
 import { cleanText } from "@/lib/validate";
+import { todayISO } from "@/lib/format";
 
 /** Season is optional; anything not in SEASONS collapses to "" (matches the DB CHECK). */
 function cleanSeason(raw: FormDataEntryValue | null): string {
@@ -49,7 +50,7 @@ export async function createLeadAction(fd: FormData) {
   const salesId = parseInt(String(fd.get("sales_id") ?? ""), 10) || undefined;
 
   const id = insertLead({
-    entry_date: cleanText(fd.get("entry_date"), 10) || new Date().toISOString().slice(0, 10),
+    entry_date: cleanText(fd.get("entry_date"), 10) || todayISO(),
     source_id: sourceId,
     sub_source: cleanText(fd.get("sub_source"), 100),
     assistant_id: assistantId,
@@ -165,7 +166,7 @@ export async function changeStatusAction(fd: FormData) {
 
   // If status changed to won, also reset cycle_start
   if (status === "won" && oldStatus !== "won") {
-    updateLead(id, { cycle_start: new Date().toISOString().slice(0, 10) });
+    updateLead(id, { cycle_start: todayISO() });
   }
 
   insertAuditLog({
@@ -262,7 +263,7 @@ export async function addStageEventAction(fd: FormData) {
   const user = await requireUser();
   const leadId = parseInt(String(fd.get("lead_id") ?? "0"), 10);
   const stage = cleanText(fd.get("stage"), 20);
-  const eventDate = cleanText(fd.get("event_date"), 10) || new Date().toISOString().slice(0, 10);
+  const eventDate = cleanText(fd.get("event_date"), 10) || todayISO();
   const note = cleanText(fd.get("note"), 1000);
 
   if (!STAGE_TYPES.includes(stage as typeof STAGE_TYPES[number]))
@@ -370,7 +371,7 @@ export async function registerDealAction(fd: FormData) {
 
   const deal: NewDeal = {
     lead_id: leadId,
-    deal_date: cleanText(fd.get("deal_date"), 10) || new Date().toISOString().slice(0, 10),
+    deal_date: cleanText(fd.get("deal_date"), 10) || todayISO(),
     lodging: cleanText(fd.get("lodging"), 20),
     program_type: cleanText(fd.get("program_type"), 20),
     plan: cleanText(fd.get("plan"), 30),

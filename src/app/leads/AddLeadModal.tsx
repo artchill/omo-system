@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Modal } from "@/components/Modal";
+import { todayISO } from "@/lib/format";
 import { createLeadAction } from "./actions";
 
 type Option = { value: string; label: string };
@@ -123,7 +124,7 @@ export function AddLeadModal({
               <input
                 name="entry_date"
                 type="date"
-                defaultValue={new Date().toISOString().slice(0, 10)}
+                defaultValue={todayISO()}
                 className="field w-full"
               />
             </label>
