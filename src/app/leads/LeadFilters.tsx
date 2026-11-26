@@ -10,17 +10,19 @@ interface Props {
   statuses: { value: LeadStatus; label: string }[];
   sources: Option[];
   assistants: Option[];
+  seasons: Option[];
   labels: {
     search: string;
     status: string;
     source: string;
     assistant: string;
+    season: string;
     all: string;
     filter: string;
   };
 }
 
-export function LeadFilters({ statuses, sources, assistants, labels }: Props) {
+export function LeadFilters({ statuses, sources, assistants, seasons, labels }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
@@ -54,7 +56,7 @@ export function LeadFilters({ statuses, sources, assistants, labels }: Props) {
       />
 
       {/* Filter row */}
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {/* Status filter */}
         <select
           className="field w-full"
@@ -98,6 +100,20 @@ export function LeadFilters({ statuses, sources, assistants, labels }: Props) {
             ))}
           </select>
         )}
+
+        {/* Season filter */}
+        <select
+          className="field w-full"
+          value={searchParams.get("season") ?? ""}
+          onChange={(e) => update("season", e.target.value)}
+        >
+          <option value="">{labels.all} {labels.season.toLowerCase()}</option>
+          {seasons.map((s) => (
+            <option key={s.value} value={s.value}>
+              {s.label}
+            </option>
+          ))}
+        </select>
       </div>
     </div>
   );

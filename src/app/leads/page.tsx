@@ -5,7 +5,7 @@ import { listLeads, type LeadListFilter } from "@/db/leads";
 import { listSources } from "@/db/sources";
 import { listUsers } from "@/db/users";
 import { LEAD_STATUSES, type LeadStatus } from "@/domain/lead-status";
-import { AGE_GROUPS, LEARNING_NEEDS, STUDENT_TYPES, CONTACT_CHANNELS, CONTACT_RESULTS } from "@/domain/enums";
+import { AGE_GROUPS, LEARNING_NEEDS, STUDENT_TYPES, CONTACT_CHANNELS, CONTACT_RESULTS, SEASONS } from "@/domain/enums";
 import { Shell } from "@/components/Header";
 import { Icon } from "@/components/Icon";
 import { LeadFilters } from "./LeadFilters";
@@ -33,6 +33,7 @@ export default async function LeadsPage({
   const qStatus = String(sp.status ?? "") as LeadStatus | "";
   const qSource = parseInt(String(sp.source ?? ""), 10) || undefined;
   const qAssistant = parseInt(String(sp.assistant ?? ""), 10) || undefined;
+  const qSeason = String(sp.season ?? "");
 
   const filter: LeadListFilter = {
     limit: PAGE_SIZE,
@@ -43,6 +44,7 @@ export default async function LeadsPage({
     filter.status = qStatus as LeadStatus;
   if (qSource) filter.sourceId = qSource;
   if (qAssistant) filter.assistantId = qAssistant;
+  if ((SEASONS as readonly string[]).includes(qSeason)) filter.season = qSeason;
 
   const { rows, total } = listLeads(filter);
 
@@ -102,6 +104,11 @@ export default async function LeadsPage({
     expectedWeeks: t("expectedWeeks"),
     nextContact: t("nextContact"),
     note: t("note"),
+    leadNote: t("leadNote"),
+    leadNotePlaceholder: t("leadNotePlaceholder"),
+    season: t("season.label"),
+    seasonPeak: t("season.peak"),
+    seasonOff: t("season.off"),
     save: tc("save"),
     saving: tc("loading"),
     cancel: tc("cancel"),
@@ -114,9 +121,15 @@ export default async function LeadsPage({
     status: t("status"),
     source: t("source"),
     assistant: t("assistant"),
+    season: t("season.label"),
     all: tc("all"),
     filter: tc("filter"),
   };
+
+  const seasonOptions = SEASONS.map((s) => ({
+    value: s,
+    label: t(`season.${s}`),
+  }));
 
   const channelOptions = CONTACT_CHANNELS.map((c) => ({ value: c, label: tCh(c) }));
   const resultOptions = CONTACT_RESULTS.map((r) => ({ value: r, label: tCr(r) }));
@@ -148,6 +161,7 @@ export default async function LeadsPage({
             statuses={statusOptions}
             sources={sources}
             assistants={assistants}
+            seasons={seasonOptions}
             labels={filterLabels}
           />
         </div>
@@ -177,6 +191,7 @@ export default async function LeadsPage({
                 <th className="whitespace-nowrap px-4 py-3.5">{t("source")}</th>
                 <th className="whitespace-nowrap px-4 py-3.5">{t("status")}</th>
                 <th className="whitespace-nowrap px-4 py-3.5">{t("stages")}</th>
+                <th className="whitespace-nowrap px-4 py-3.5">{t("leadNote")}</th>
                 <th className="whitespace-nowrap px-4 py-3.5">{t("contacts")}</th>
                 <th className="w-10 px-3 py-3.5"><span className="sr-only">Detail</span></th>
               </tr>
@@ -208,12 +223,34 @@ export default async function LeadsPage({
                     {lead.source_name ?? "—"}
                   </td>
                   <td className="px-4 py-3.5">
-                    <StatusBadge status={lead.status} label={ts(lead.status)} />
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <StatusBadge status={lead.status} label={ts(lead.status)} />
+                      {lead.season && (
+                        <span
+                          className={`rounded-md px-1.5 py-0.5 text-[0.7rem] ${
+                            lead.season === "peak"
+                              ? "bg-warn/15 text-warn"
+                              : "bg-white/[0.06] text-muted"
+                          }`}
+                        >
+                          {lead.season === "peak" ? t("season.peak") : t("season.off")}
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-3.5 text-xs text-muted">
                     {lead.latest_stage
                       ? tStage(lead.latest_stage as "valid" | "consult" | "invite_trial" | "trial")
                       : "—"}
+                  </td>
+                  <td className="max-w-[14rem] px-4 py-3.5 text-xs text-muted">
+                    {lead.lead_note ? (
+                      <span className="line-clamp-2" title={lead.lead_note}>
+                        {lead.lead_note}
+                      </span>
+                    ) : (
+                      "—"
+                    )}
                   </td>
                   <td className="px-4 py-3.5">
                     <div className="flex items-center gap-1.5">
@@ -293,11 +330,29 @@ export default async function LeadsPage({
                 )}
               </div>
 
+              {/* Row 2b: Lead note */}
+              {lead.lead_note && (
+                <p className="mb-3 line-clamp-2 text-xs leading-relaxed text-muted">
+                  {lead.lead_note}
+                </p>
+              )}
+
               {/* Row 3: Metadata chips */}
               <div className="flex flex-wrap items-center gap-2 text-xs">
                 {lead.source_name && (
                   <span className="rounded-md bg-white/[0.06] px-2 py-0.5 text-muted">
                     {lead.source_name}
+                  </span>
+                )}
+                {lead.season && (
+                  <span
+                    className={`rounded-md px-2 py-0.5 ${
+                      lead.season === "peak"
+                        ? "bg-warn/15 text-warn"
+                        : "bg-white/[0.06] text-muted"
+                    }`}
+                  >
+                    {lead.season === "peak" ? t("season.peak") : t("season.off")}
                   </span>
                 )}
                 {lead.latest_stage && (

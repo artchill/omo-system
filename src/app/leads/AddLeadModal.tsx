@@ -172,16 +172,38 @@ export function AddLeadModal({
             </label>
           </div>
 
-          {/* Next contact */}
+          {/* Row: next contact + season */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="block">
+              <span className="mb-1 block text-xs text-muted">{labels.nextContact}</span>
+              <input name="next_contact" type="date" className="field w-full" />
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-xs text-muted">{labels.season}</span>
+              <select name="season" className="field w-full">
+                <option value="">—</option>
+                <option value="peak">{labels.seasonPeak}</option>
+                <option value="off">{labels.seasonOff}</option>
+              </select>
+            </label>
+          </div>
+
+          {/* Lead note (list-level memo) */}
           <label className="block">
-            <span className="mb-1 block text-xs text-muted">{labels.nextContact}</span>
-            <input name="next_contact" type="date" className="field w-full" />
+            <span className="mb-1 block text-xs text-muted">{labels.leadNote}</span>
+            <textarea
+              name="lead_note"
+              rows={2}
+              maxLength={500}
+              placeholder={labels.leadNotePlaceholder}
+              className="field w-full"
+            />
           </label>
 
           {/* Notes */}
           <label className="block">
             <span className="mb-1 block text-xs text-muted">{labels.note}</span>
-            <textarea name="note" rows={2} className="field w-full" />
+            <textarea name="note" rows={2} maxLength={1000} className="field w-full" />
           </label>
 
           {/* Footer */}

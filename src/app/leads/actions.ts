@@ -9,6 +9,7 @@ import {
   insertLead,
   updateLead,
   archiveLead,
+  softDeleteLead,
   findLeadById,
   findDuplicates,
 } from "@/db/leads";
@@ -17,8 +18,14 @@ import { insertStageEvent } from "@/db/stage-events";
 import { insertConsultInvite, updateConsultAttendance } from "@/db/consult-invites";
 import { insertDeal, type NewDeal } from "@/db/deals";
 import { getCommissionDefaults, isPeakSeason } from "@/db/settings";
-import { CONTACT_CHANNELS, CONTACT_RESULTS, STAGE_TYPES, ATTENDANCE_VALUES } from "@/domain/enums";
+import { CONTACT_CHANNELS, CONTACT_RESULTS, STAGE_TYPES, ATTENDANCE_VALUES, SEASONS } from "@/domain/enums";
 import { cleanText } from "@/lib/validate";
+
+/** Season is optional; anything not in SEASONS collapses to "" (matches the DB CHECK). */
+function cleanSeason(raw: FormDataEntryValue | null): string {
+  const v = cleanText(raw, 10);
+  return (SEASONS as readonly string[]).includes(v) ? v : "";
+}
 
 // ── Create Lead ───────────────────────────────────────────────────
 export async function createLeadAction(fd: FormData) {
@@ -58,6 +65,8 @@ export async function createLeadAction(fd: FormData) {
     expected_depart: cleanText(fd.get("expected_depart"), 10) || undefined,
     expected_weeks: parseInt(String(fd.get("expected_weeks") ?? ""), 10) || undefined,
     next_contact: cleanText(fd.get("next_contact"), 10) || undefined,
+    lead_note: cleanText(fd.get("lead_note"), 500),
+    season: cleanSeason(fd.get("season")),
   });
 
   insertAuditLog({
@@ -84,21 +93,32 @@ export async function updateLeadAction(fd: FormData) {
   const fields: Record<string, unknown> = {};
   const changes: Record<string, [unknown, unknown]> = {};
 
+  const TEXT_LIMITS: Record<string, number> = { note: 1000, lead_note: 500 };
+
   for (const key of [
     "name", "phone", "email", "line_id", "age_group", "need",
-    "student_type", "note", "sub_source", "expected_depart", "expected_weeks",
-    "next_contact", "entry_date",
+    "student_type", "note", "lead_note", "sub_source", "expected_depart",
+    "expected_weeks", "next_contact", "entry_date",
   ]) {
     const val = fd.get(key);
     if (val !== null) {
       const cleaned = key === "expected_weeks"
         ? (parseInt(String(val), 10) || null)
-        : cleanText(val, key === "note" ? 1000 : 254);
+        : cleanText(val, TEXT_LIMITS[key] ?? 254);
       const oldVal = (existing as Record<string, unknown>)[key];
       if (String(cleaned ?? "") !== String(oldVal ?? "")) {
         fields[key] = cleaned;
         changes[key] = [oldVal, cleaned];
       }
+    }
+  }
+
+  // Season: validated against SEASONS, "" clears it
+  if (fd.get("season") !== null) {
+    const season = cleanSeason(fd.get("season"));
+    if (season !== existing.season) {
+      fields.season = season;
+      changes.season = [existing.season, season];
     }
   }
 
@@ -174,6 +194,28 @@ export async function archiveLeadAction(fd: FormData) {
     entity: "lead",
     action: "archive",
     changes: {},
+  });
+
+  revalidatePath("/leads");
+  return {};
+}
+
+// ── Soft Delete Lead (admin only) ─────────────────────────────────
+export async function softDeleteLeadAction(fd: FormData) {
+  const user = await requireUser();
+  if (!can(user.role, "leads.delete")) return { error: "permissionDenied" as const };
+
+  const id = parseInt(String(fd.get("id") ?? "0"), 10);
+  const existing = findLeadById(id);
+  if (!existing) return { error: "leadNotFound" as const };
+
+  softDeleteLead(id);
+  insertAuditLog({
+    user_id: user.id,
+    lead_id: id,
+    entity: "lead",
+    action: "soft_delete",
+    changes: { name: existing.name },
   });
 
   revalidatePath("/leads");

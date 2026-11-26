@@ -116,3 +116,8 @@ export type AbsentReason = (typeof ABSENT_REASONS)[number];
 // ── Source grades ─────────────────────────────────────────────────
 export const SOURCE_GRADES = ["A", "B", "C", "庫", "轉", "續&M", ""] as const;
 export type SourceGrade = (typeof SOURCE_GRADES)[number];
+
+// ── Season (淡旺季) ────────────────────────────────────────────────
+// "" = unset, matches the DB CHECK constraint on leads.season
+export const SEASONS = ["peak", "off"] as const;
+export type Season = (typeof SEASONS)[number];

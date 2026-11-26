@@ -53,6 +53,7 @@ export type LeadListFilter = {
   assistantId?: number;
   salesId?: number;
   sourceId?: number;
+  season?: string;
   search?: string;
   limit?: number;
   offset?: number;
@@ -80,6 +81,10 @@ export function listLeads(filter: LeadListFilter = {}): {
   if (filter.sourceId) {
     where.push("l.source_id = ?");
     params.push(filter.sourceId);
+  }
+  if (filter.season) {
+    where.push("l.season = ?");
+    params.push(filter.season);
   }
   if (filter.search) {
     where.push(

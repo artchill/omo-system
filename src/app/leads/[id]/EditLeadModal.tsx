@@ -25,6 +25,8 @@ interface Props {
     expected_weeks: number | null;
     next_contact: string | null;
     note: string;
+    lead_note: string;
+    season: string;
   };
   sources: Option[];
   assistants: Option[];
@@ -181,14 +183,36 @@ export function EditLeadModal({
             </label>
           </div>
 
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="block">
+              <span className="mb-1 block text-xs text-muted">{labels.nextContact}</span>
+              <input name="next_contact" type="date" defaultValue={lead.next_contact ?? ""} className="field w-full" />
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-xs text-muted">{labels.season}</span>
+              <select name="season" defaultValue={lead.season} className="field w-full">
+                <option value="">—</option>
+                <option value="peak">{labels.seasonPeak}</option>
+                <option value="off">{labels.seasonOff}</option>
+              </select>
+            </label>
+          </div>
+
           <label className="block">
-            <span className="mb-1 block text-xs text-muted">{labels.nextContact}</span>
-            <input name="next_contact" type="date" defaultValue={lead.next_contact ?? ""} className="field w-full" />
+            <span className="mb-1 block text-xs text-muted">{labels.leadNote}</span>
+            <textarea
+              name="lead_note"
+              rows={2}
+              maxLength={500}
+              placeholder={labels.leadNotePlaceholder}
+              defaultValue={lead.lead_note}
+              className="field w-full"
+            />
           </label>
 
           <label className="block">
             <span className="mb-1 block text-xs text-muted">{labels.note}</span>
-            <textarea name="note" rows={2} defaultValue={lead.note} className="field w-full" />
+            <textarea name="note" rows={2} maxLength={1000} defaultValue={lead.note} className="field w-full" />
           </label>
 
           <div className="flex items-center justify-end gap-3 border-t border-edge pt-4">

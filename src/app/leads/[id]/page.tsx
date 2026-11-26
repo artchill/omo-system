@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
-import { requirePermission, requireUser } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { can } from "@/domain/roles";
 import { findLeadById } from "@/db/leads";
 import { listContactLogs } from "@/db/contact-logs";
@@ -26,6 +26,7 @@ import { Shell } from "@/components/Header";
 import { Icon } from "@/components/Icon";
 import { StatusBadge } from "../StatusBadge";
 import { EditLeadModal } from "./EditLeadModal";
+import { DeleteLeadButton } from "./DeleteLeadButton";
 import { StatusChanger } from "./StatusChanger";
 import { DetailTabs } from "./DetailTabs";
 import { ContactLogTab } from "./ContactLogTab";
@@ -109,9 +110,22 @@ export default async function LeadDetailPage({ params }: PageProps) {
     expectedWeeks: t("expectedWeeks"),
     nextContact: t("nextContact"),
     note: t("note"),
+    leadNote: t("leadNote"),
+    leadNotePlaceholder: t("leadNotePlaceholder"),
+    season: t("season.label"),
+    seasonPeak: t("season.peak"),
+    seasonOff: t("season.off"),
     save: tc("save"),
     saving: tc("loading"),
     cancel: tc("cancel"),
+    errGeneric: tErr("generic"),
+  };
+
+  const deleteLabels: Record<string, string> = {
+    delete: t("softDelete"),
+    deleteConfirm: t("softDeleteConfirm"),
+    cancel: tc("cancel"),
+    saving: tc("loading"),
     errGeneric: tErr("generic"),
   };
 
@@ -304,6 +318,17 @@ export default async function LeadDetailPage({ params }: PageProps) {
             {/* Status + changer */}
             <div className="flex flex-wrap items-center gap-3">
               <StatusBadge status={lead.status} label={ts(lead.status)} />
+              {lead.season && (
+                <span
+                  className={`chip ${
+                    lead.season === "peak"
+                      ? "bg-warn/15 text-warn"
+                      : "bg-white/[0.06] text-muted"
+                  }`}
+                >
+                  {lead.season === "peak" ? t("season.peak") : t("season.off")}
+                </span>
+              )}
               {can(user.role, "leads.edit") && (
                 <StatusChanger
                   leadId={id}
@@ -378,15 +403,23 @@ export default async function LeadDetailPage({ params }: PageProps) {
               )}
             </div>
 
+            {lead.lead_note && (
+              <div>
+                <span className="text-xs text-muted">{t("leadNote")}</span>
+                <p className="whitespace-pre-line text-sm">{lead.lead_note}</p>
+              </div>
+            )}
+
             {lead.note && (
               <div>
                 <span className="text-xs text-muted">{t("note")}</span>
-                <p className="text-sm">{lead.note}</p>
+                <p className="whitespace-pre-line text-sm">{lead.note}</p>
               </div>
             )}
           </div>
 
-          {/* Edit button */}
+          {/* Edit / delete */}
+          <div className="flex flex-shrink-0 items-center gap-2">
           {can(user.role, "leads.edit") && (
             <EditLeadModal
               lead={{
@@ -407,6 +440,8 @@ export default async function LeadDetailPage({ params }: PageProps) {
                 expected_weeks: lead.expected_weeks,
                 next_contact: lead.next_contact,
                 note: lead.note,
+                lead_note: lead.lead_note,
+                season: lead.season,
               }}
               sources={sources}
               assistants={assistants}
@@ -417,6 +452,14 @@ export default async function LeadDetailPage({ params }: PageProps) {
               labels={editLabels}
             />
           )}
+          {can(user.role, "leads.delete") && (
+            <DeleteLeadButton
+              leadId={lead.id}
+              leadName={lead.name}
+              labels={deleteLabels}
+            />
+          )}
+          </div>
         </div>
       </div>
 
