@@ -132,18 +132,18 @@ export default async function UsersPage({
       {/* ── User table ── */}
       <div className="glass overflow-hidden">
         {/* Column headers — hidden on mobile */}
-        <div className="hidden sm:grid sm:grid-cols-[1fr_8rem_6rem_5rem] items-center gap-4 border-b border-edge px-5 py-3 text-xs font-medium text-muted uppercase tracking-wider">
+        <div className="hidden sm:grid sm:grid-cols-[minmax(10rem,3fr)_minmax(6rem,1fr)_minmax(5rem,1fr)_auto] items-center gap-4 border-b border-edge px-5 py-3 text-xs font-medium text-muted uppercase tracking-wider">
           <span>{t("name")}</span>
-          <span>{t("role")}</span>
-          <span>{t("active")}</span>
-          <span className="text-right">{t("edit")}</span>
+          <span className="whitespace-nowrap">{t("role")}</span>
+          <span className="whitespace-nowrap">{t("active")}</span>
+          <span className="whitespace-nowrap text-right">{t("edit")}</span>
         </div>
 
         {/* Rows */}
         {users.map((u, i) => (
           <div
             key={u.id}
-            className={`grid grid-cols-1 sm:grid-cols-[1fr_8rem_6rem_5rem] items-center gap-x-4 gap-y-2 px-5 py-4 transition-colors hover:bg-white/[0.03] ${i > 0 ? "border-t border-edge/50" : ""} ${u.active === 1 ? "" : "opacity-50"}`}
+            className={`grid grid-cols-1 sm:grid-cols-[minmax(10rem,3fr)_minmax(6rem,1fr)_minmax(5rem,1fr)_auto] items-center gap-x-4 gap-y-2 px-5 py-4 transition-colors hover:bg-white/[0.03] ${i > 0 ? "border-t border-edge/50" : ""} ${u.active === 1 ? "" : "opacity-50"}`}
           >
             {/* Name + email */}
             <div className="flex items-center gap-3 min-w-0">

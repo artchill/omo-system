@@ -43,11 +43,12 @@ export default async function AuditLogPage(props: {
 
   return (
     <Shell title={t("title")}>
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold">{t("title")}</h2>
-
-        {/* Entity filter */}
-        <div className="flex items-center gap-2">
+      <div className="mb-6">
+        {/*
+          Nine filters: without wrapping this row forced the whole document
+          wider than the viewport on tablets and phones.
+        */}
+        <div className="flex flex-wrap items-center gap-2">
           <Link
             href="/admin/audit"
             className={`chip text-xs ${!entity ? "bg-accent/20 text-accent" : ""}`}
@@ -68,7 +69,7 @@ export default async function AuditLogPage(props: {
 
       <div className="glass overflow-hidden">
         {/* Header */}
-        <div className="hidden border-b border-edge px-5 py-3 text-xs font-medium uppercase tracking-wider text-muted md:grid md:grid-cols-[8rem_6rem_6rem_1fr_6rem_8rem]">
+        <div className="hidden border-b border-edge px-5 py-3 text-xs font-medium uppercase tracking-wider text-muted md:grid md:grid-cols-[8rem_6rem_6rem_minmax(0,1fr)_6rem_auto] md:gap-x-4">
           <span>{t("user")}</span>
           <span>{t("entity")}</span>
           <span>{t("action")}</span>
@@ -84,7 +85,7 @@ export default async function AuditLogPage(props: {
           return (
             <div
               key={log.id}
-              className="flex flex-col gap-1 border-b border-edge px-5 py-3 transition-colors hover:bg-white/[0.03] md:grid md:grid-cols-[8rem_6rem_6rem_1fr_6rem_8rem] md:items-start"
+              className="flex flex-col gap-1 border-b border-edge px-5 py-3 transition-colors hover:bg-white/[0.03] md:grid md:grid-cols-[8rem_6rem_6rem_minmax(0,1fr)_6rem_auto] md:gap-x-4 md:items-start"
             >
               <span className="text-sm font-medium">
                 {log.user_name ?? "—"}

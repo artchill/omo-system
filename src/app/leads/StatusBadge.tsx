@@ -19,7 +19,7 @@ export function StatusBadge({
   const group = statusGroup(status);
   return (
     <span
-      className={`inline-block rounded-full px-2.5 py-0.5 text-[0.7rem] font-medium leading-snug ${BG[group]}`}
+      className={`inline-block whitespace-nowrap rounded-full px-2.5 py-0.5 text-[0.7rem] font-medium leading-snug ${BG[group]}`}
     >
       {label}
     </span>

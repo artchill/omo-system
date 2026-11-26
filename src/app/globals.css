@@ -102,6 +102,9 @@ dialog.modal-dialog:not([open]) {
     padding: 0.55rem 1rem;
     font-size: 0.875rem;
     font-weight: 600;
+    /* Labels are short; without this a button in a narrow table column
+       breaks mid-label ("Edit" over "source") and the row grows taller. */
+    white-space: nowrap;
     transition:
       transform 0.15s ease,
       box-shadow 0.15s ease,

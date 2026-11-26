@@ -180,7 +180,13 @@ export default async function LeadsPage({
 
       {/* ── Desktop table (xl+) ─────────────────────────────── */}
       <div className="glass hidden overflow-hidden xl:block">
-        <div className="overflow-x-auto">
+        {/*
+          `relative` so absolutely positioned descendants — the sr-only label
+          in the last header cell — resolve against this scroller instead of
+          the viewport. Without it that 1px span sat past the right edge of
+          the page and gave the whole document a horizontal scrollbar.
+        */}
+        <div className="relative overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-edge text-left text-xs font-medium uppercase tracking-wider text-muted">
@@ -202,10 +208,11 @@ export default async function LeadsPage({
                   key={lead.id}
                   className="group transition-colors hover:bg-white/[0.03]"
                 >
-                  <td className="px-5 py-3.5">
+                  <td className="max-w-[14rem] px-5 py-3.5">
                     <Link
                       href={`/leads/${lead.id}`}
-                      className="font-medium text-foreground transition-colors group-hover:text-accent"
+                      className="block truncate font-medium text-foreground transition-colors group-hover:text-accent"
+                      title={lead.name}
                     >
                       {lead.name}
                     </Link>
@@ -227,7 +234,7 @@ export default async function LeadsPage({
                       <StatusBadge status={lead.status} label={ts(lead.status)} />
                       {lead.season && (
                         <span
-                          className={`rounded-md px-1.5 py-0.5 text-[0.7rem] ${
+                          className={`whitespace-nowrap rounded-md px-1.5 py-0.5 text-[0.7rem] ${
                             lead.season === "peak"
                               ? "bg-warn/15 text-warn"
                               : "bg-white/[0.06] text-muted"
@@ -346,7 +353,7 @@ export default async function LeadsPage({
                 )}
                 {lead.season && (
                   <span
-                    className={`rounded-md px-2 py-0.5 ${
+                    className={`whitespace-nowrap rounded-md px-2 py-0.5 ${
                       lead.season === "peak"
                         ? "bg-warn/15 text-warn"
                         : "bg-white/[0.06] text-muted"
