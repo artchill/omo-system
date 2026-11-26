@@ -199,4 +199,53 @@ export const MIGRATIONS: { id: number; sql: string }[] = [
         ('dashboard_visibility', 'admin,sales');
     `,
   },
+  {
+    id: 3,
+    sql: `
+      -- New lead columns: lead_note (list-level memo), season (peak/off), deleted_at (admin soft-delete)
+      ALTER TABLE leads ADD COLUMN lead_note       TEXT NOT NULL DEFAULT '';
+      ALTER TABLE leads ADD COLUMN season          TEXT NOT NULL DEFAULT '' CHECK (season IN ('','peak','off'));
+      ALTER TABLE leads ADD COLUMN deleted_at       TEXT;
+
+      -- Deals: bonus share columns
+      ALTER TABLE deals ADD COLUMN assistant_share_pct REAL;
+      ALTER TABLE deals ADD COLUMN sales_bonus        REAL;
+      ALTER TABLE deals ADD COLUMN assistant_bonus     REAL;
+
+      -- Attendance: clock-in / clock-out records
+      CREATE TABLE attendance (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        date       TEXT    NOT NULL,
+        check_in   TEXT,
+        check_out  TEXT,
+        note       TEXT    NOT NULL DEFAULT '',
+        created_at TEXT    NOT NULL,
+        UNIQUE(user_id, date)
+      );
+      CREATE INDEX attendance_user_date ON attendance(user_id, date);
+
+      -- Shifts: submitted schedules, approved by admin
+      CREATE TABLE shifts (
+        id              INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        date            TEXT    NOT NULL,
+        start_time      TEXT    NOT NULL,
+        end_time        TEXT    NOT NULL,
+        shift_type      TEXT    NOT NULL DEFAULT 'regular' CHECK (shift_type IN ('regular','day_off','leave')),
+        status          TEXT    NOT NULL DEFAULT 'draft' CHECK (status IN ('draft','submitted','approved','rejected')),
+        approved_by     INTEGER REFERENCES users(id),
+        rejected_reason TEXT    NOT NULL DEFAULT '',
+        note            TEXT    NOT NULL DEFAULT '',
+        created_at      TEXT    NOT NULL
+      );
+      CREATE INDEX shifts_user_date   ON shifts(user_id, date);
+      CREATE INDEX shifts_status      ON shifts(status);
+
+      -- Commission rules (settings-based for now; v1 uses fixed rates)
+      INSERT OR IGNORE INTO settings (key, value) VALUES
+        ('default_assistant_share_pct', '0'),
+        ('bonus_settlement_day',        '1');
+    `,
+  },
 ];

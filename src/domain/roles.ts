@@ -17,6 +17,7 @@ export const PERMISSIONS = {
   "leads.create": ["admin", "sales"],
   "leads.edit": ["admin", "sales", "assistant"],
   "leads.import": ["admin", "sales"],
+  "leads.delete": ["admin"],
   "deals.create": ["admin", "sales", "assistant"],
   "deals.edit_financials": ["admin", "sales"],
   "dashboard.view": ["admin", "sales"],
@@ -24,6 +25,12 @@ export const PERMISSIONS = {
   "settings.manage": ["admin"],
   "audit.view": ["admin"],
   "sources.manage": ["admin"],
+  "attendance.own": ["admin", "sales", "assistant"],
+  "attendance.view_all": ["admin"],
+  "shifts.submit": ["admin", "sales", "assistant"],
+  "shifts.approve": ["admin"],
+  "bonus.own": ["admin", "sales", "assistant"],
+  "bonus.view_all": ["admin"],
 } as const satisfies Record<string, readonly Role[]>;
 
 export type Permission = keyof typeof PERMISSIONS;

@@ -23,6 +23,9 @@ export type DealRow = {
   paid_amount: number | null;
   key_points: string;
   note: string;
+  assistant_share_pct: number | null;
+  sales_bonus: number | null;
+  assistant_bonus: number | null;
   created_at: string;
   updated_at: string;
   lead_name?: string;

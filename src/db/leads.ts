@@ -23,9 +23,12 @@ export type LeadRow = {
   expected_weeks: number | null;
   next_contact: string | null;
   data_error_flag: number;
+  lead_note: string;
+  season: string;
   created_at: string;
   updated_at: string;
   archived_at: string | null;
+  deleted_at: string | null;
 };
 
 /** Extended lead row with joined source/user names for list views */
@@ -41,7 +44,7 @@ const now = () => new Date().toISOString();
 
 export function countLeads(): number {
   return Number(
-    (db().prepare("SELECT COUNT(*) AS n FROM leads WHERE archived_at IS NULL").get() as { n: number } | undefined)?.n ?? 0,
+    (db().prepare("SELECT COUNT(*) AS n FROM leads WHERE archived_at IS NULL AND deleted_at IS NULL").get() as { n: number } | undefined)?.n ?? 0,
   );
 }
 
@@ -59,7 +62,7 @@ export function listLeads(filter: LeadListFilter = {}): {
   rows: LeadListRow[];
   total: number;
 } {
-  const where: string[] = ["l.archived_at IS NULL"];
+  const where: string[] = ["l.archived_at IS NULL", "l.deleted_at IS NULL"];
   const params: (string | number | null)[] = [];
 
   if (filter.status) {
@@ -80,10 +83,10 @@ export function listLeads(filter: LeadListFilter = {}): {
   }
   if (filter.search) {
     where.push(
-      "(l.name LIKE ? OR l.phone LIKE ? OR l.email LIKE ? OR l.line_id LIKE ?)",
+      "(l.name LIKE ? OR l.phone LIKE ? OR l.email LIKE ? OR l.line_id LIKE ? OR l.lead_note LIKE ?)",
     );
     const q = `%${filter.search}%`;
-    params.push(q, q, q, q);
+    params.push(q, q, q, q, q);
   }
 
   const whereClause = where.join(" AND ");
@@ -152,6 +155,8 @@ export type NewLead = {
   expected_depart?: string;
   expected_weeks?: number;
   next_contact?: string;
+  lead_note?: string;
+  season?: string;
 };
 
 export function insertLead(l: NewLead): number {
@@ -164,8 +169,9 @@ export function insertLead(l: NewLead): number {
         name, phone, email, line_id,
         age_group, need, student_type, note,
         expected_depart, expected_weeks, next_contact,
+        lead_note, season,
         created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, 'pending_contact', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, 'pending_contact', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .run(
       l.entry_date,
@@ -185,6 +191,8 @@ export function insertLead(l: NewLead): number {
       l.expected_depart ?? null,
       l.expected_weeks ?? null,
       l.next_contact ?? null,
+      l.lead_note ?? "",
+      l.season ?? "",
       t,
       t,
     );
@@ -217,6 +225,13 @@ export function archiveLead(id: number) {
     .run(now(), now(), id);
 }
 
+/** Soft-delete a lead (admin only). Sets deleted_at timestamp. */
+export function softDeleteLead(id: number) {
+  db()
+    .prepare("UPDATE leads SET deleted_at = ?, updated_at = ? WHERE id = ?")
+    .run(now(), now(), id);
+}
+
 /** Check for potential duplicates by email, phone, or LINE ID */
 export function findDuplicates(
   email: string,
@@ -239,7 +254,7 @@ export function findDuplicates(
     conds.push("line_id = ?");
     params.push(lineId);
   }
-  let sql = `SELECT * FROM leads WHERE archived_at IS NULL AND (${conds.join(" OR ")})`;
+  let sql = `SELECT * FROM leads WHERE archived_at IS NULL AND deleted_at IS NULL AND (${conds.join(" OR ")})`;
   if (excludeId) {
     sql += " AND id != ?";
     params.push(excludeId);
