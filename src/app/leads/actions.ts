@@ -20,6 +20,12 @@ import { insertDeal, type NewDeal } from "@/db/deals";
 import { getCommissionDefaults, isPeakSeason } from "@/db/settings";
 import { CONTACT_CHANNELS, CONTACT_RESULTS, STAGE_TYPES, ATTENDANCE_VALUES, SEASONS } from "@/domain/enums";
 import { cleanText } from "@/lib/validate";
+import {
+  insertLeadNote,
+  updateLeadNote,
+  deleteLeadNote,
+  findLeadNoteById,
+} from "@/db/lead-notes";
 import { todayISO } from "@/lib/format";
 
 /** Season is optional; anything not in SEASONS collapses to "" (matches the DB CHECK). */
@@ -418,4 +424,74 @@ export async function registerDealAction(fd: FormData) {
   revalidatePath(`/leads/${leadId}`);
   revalidatePath("/leads");
   return { dealId, seasonWarning };
+}
+
+// ── 諮詢筆記 ───────────────────────────────────────────────────────
+export async function addLeadNoteAction(fd: FormData) {
+  const user = await requireUser();
+  if (!can(user.role, "leads.edit")) return { error: "permissionDenied" as const };
+
+  const leadId = parseInt(String(fd.get("lead_id") ?? "0"), 10);
+  const body = cleanText(fd.get("body"), 4000);
+  if (!leadId || !body) return { error: "generic" as const };
+
+  const id = insertLeadNote(leadId, user.id, body);
+  insertAuditLog({
+    user_id: user.id,
+    lead_id: leadId,
+    entity: "lead_note",
+    action: "create",
+    changes: { noteId: id },
+  });
+
+  revalidatePath(`/leads/${leadId}`);
+  return {};
+}
+
+export async function updateLeadNoteAction(fd: FormData) {
+  const user = await requireUser();
+  const id = parseInt(String(fd.get("id") ?? "0"), 10);
+  const body = cleanText(fd.get("body"), 4000);
+  const existing = findLeadNoteById(id);
+  if (!existing || !body) return { error: "generic" as const };
+
+  // A note is the author's own words — only they or an admin may rewrite it.
+  if (existing.user_id !== user.id && user.role !== "admin") {
+    return { error: "permissionDenied" as const };
+  }
+
+  updateLeadNote(id, body);
+  insertAuditLog({
+    user_id: user.id,
+    lead_id: existing.lead_id,
+    entity: "lead_note",
+    action: "update",
+    changes: { noteId: id },
+  });
+
+  revalidatePath(`/leads/${existing.lead_id}`);
+  return {};
+}
+
+export async function deleteLeadNoteAction(fd: FormData) {
+  const user = await requireUser();
+  const id = parseInt(String(fd.get("id") ?? "0"), 10);
+  const existing = findLeadNoteById(id);
+  if (!existing) return { error: "generic" as const };
+
+  if (existing.user_id !== user.id && user.role !== "admin") {
+    return { error: "permissionDenied" as const };
+  }
+
+  deleteLeadNote(id);
+  insertAuditLog({
+    user_id: user.id,
+    lead_id: existing.lead_id,
+    entity: "lead_note",
+    action: "delete",
+    changes: { noteId: id },
+  });
+
+  revalidatePath(`/leads/${existing.lead_id}`);
+  return {};
 }

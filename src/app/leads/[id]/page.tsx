@@ -1,17 +1,14 @@
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { requirePermission } from "@/lib/auth";
 import { can } from "@/domain/roles";
 import { findLeadById } from "@/db/leads";
-import { listContactLogs } from "@/db/contact-logs";
-import { listStageEvents } from "@/db/stage-events";
-import { listConsultInvites } from "@/db/consult-invites";
 import { listDealsByLead } from "@/db/deals";
 import { listSources } from "@/db/sources";
 import { listUsers } from "@/db/users";
 import { getCommissionDefaults } from "@/db/settings";
-import { LEAD_STATUSES } from "@/domain/lead-status";
+import { LEAD_STATUSES, type LeadStatus } from "@/domain/lead-status";
 import {
   AGE_GROUPS,
   LEARNING_NEEDS,
@@ -21,6 +18,7 @@ import {
   STAGE_TYPES,
   PLANS,
   CAMPUSES,
+  optionLabel,
 } from "@/domain/enums";
 import { Shell } from "@/components/Header";
 import { Icon } from "@/components/Icon";
@@ -30,9 +28,12 @@ import { DeleteLeadButton } from "./DeleteLeadButton";
 import { StatusChanger } from "./StatusChanger";
 import { StageChanger } from "./StageChanger";
 import { DetailTabs } from "./DetailTabs";
-import { ContactLogTab } from "./ContactLogTab";
-import { StageTab } from "./StageTab";
-import { ConsultInviteTab } from "./ConsultInviteTab";
+import { RecordFeed } from "./RecordFeed";
+import { ConsultNotes } from "./ConsultNotes";
+import { AddRecordMenu } from "./AddRecordMenu";
+import { listLeadTimeline, type TimelineEntry } from "@/db/lead-timeline";
+import { listLeadNotes } from "@/db/lead-notes";
+import { formatDateTime } from "@/lib/format";
 import { DealTab } from "./DealTab";
 
 type PageProps = { params: Promise<{ id: string }> };
@@ -46,6 +47,7 @@ export default async function LeadDetailPage({ params }: PageProps) {
 
   const [
     t, tc, ts, tCh, tCr, tSt, tCi, tD, tAg, tNeed, tStType, tPlan, tCampus, tErr, tCl,
+    tRec, locale,
   ] = await Promise.all([
     getTranslations("Leads"),
     getTranslations("Common"),
@@ -62,12 +64,13 @@ export default async function LeadDetailPage({ params }: PageProps) {
     getTranslations("Campus"),
     getTranslations("Errors"),
     getTranslations("ContactLog"),
+    getTranslations("Records"),
+    getLocale(),
   ]);
 
-  const contactLogs = listContactLogs(id);
-  const stageEvents = listStageEvents(id);
-  const consultInvites = listConsultInvites(id);
   const deals = listDealsByLead(id);
+  const timeline = listLeadTimeline(id);
+  const leadNotes = listLeadNotes(id);
 
   const sources = listSources(false).map((s) => ({
     value: String(s.id),
@@ -179,26 +182,6 @@ export default async function LeadDetailPage({ params }: PageProps) {
   for (const st of STAGE_TYPES) stageLabels[`st_${st}`] = tSt(st);
 
   // Consult invite labels
-  const inviteLabels: Record<string, string> = {
-    title: t("invites"),
-    add: tCi("add"),
-    scheduledAt: tCi("scheduledAt"),
-    by: "—",
-    save: tc("save"),
-    cancel: tc("cancel"),
-    noData: tc("noData"),
-    noSchedule: "—",
-    attended: tCi("attended"),
-    absent: tCi("absent"),
-    absentReason: tCi("absentReason"),
-    att_pending: tCi("pending"),
-    att_attended: tCi("attended"),
-    att_absent: tCi("absent"),
-    ar_no_response: tCi("no_response"),
-    ar_not_interested: tCi("not_interested"),
-    ar_no_show: tCi("no_show"),
-    ar_other: tCi("other"),
-  };
 
   // Deal labels
   const commDefaults = getCommissionDefaults();
@@ -239,76 +222,131 @@ export default async function LeadDetailPage({ params }: PageProps) {
   const planOptions = PLANS.map((p) => ({ value: p, label: tPlan(p) }));
   const campusOptions = CAMPUSES.map((c) => ({ value: c, label: tCampus(c) }));
 
+  const recordLabels: Record<string, string> = {
+    empty: tRec("empty"),
+    kind_status: tRec("kindStatus"),
+    kind_stage: tRec("kindStage"),
+    kind_contact: tRec("kindContact"),
+    kind_invite: tRec("kindInvite"),
+    kind_deal: tRec("kindDeal"),
+    kind_edit: tRec("kindEdit"),
+  };
+
+  /** Turns an entry's option codes into the one line shown under its chip. */
+  const describe = (e: TimelineEntry): string => {
+    switch (e.kind) {
+      case "status":
+        return tRec("statusChanged", {
+          from: e.code ? ts(e.code as LeadStatus) : "—",
+          to: e.code2 ? ts(e.code2 as LeadStatus) : "—",
+        });
+      case "stage":
+        return optionLabel(tSt as (k: string) => string, STAGE_TYPES, e.code, "");
+      case "contact": {
+        const channel = optionLabel(tCh as (k: string) => string, CONTACT_CHANNELS, e.code, "");
+        const result = optionLabel(tCr as (k: string) => string, CONTACT_RESULTS, e.code2, "");
+        return [channel, result].filter(Boolean).join(" · ");
+      }
+      case "invite":
+        return e.extra
+          ? tRec("scheduledFor", { when: formatDateTime(e.extra, locale) })
+          : "";
+      case "deal":
+        return e.extra;
+      case "edit":
+        return tRec("fieldsChanged", { fields: e.extra });
+    }
+  };
+
+  const noteLabels: Record<string, string> = {
+    noteAdd: tRec("noteAdd"),
+    notePlaceholder: tRec("notePlaceholder"),
+    noteEmpty: tRec("noteEmpty"),
+    edited: tRec("edited"),
+    edit: tc("edit"),
+    delete: tc("delete"),
+    save: tc("save"),
+    saving: tc("loading"),
+    cancel: tc("cancel"),
+    errGeneric: tErr("generic"),
+  };
+
+  const addRecordLabels: Record<string, string> = {
+    add: tRec("add"),
+    pickType: tRec("pickType"),
+    kindContact: tRec("kindContact"),
+    kindStage: tRec("kindStage"),
+    kindInvite: tRec("kindInvite"),
+    channel: tCl("channel"),
+    result: tCl("result"),
+    note: tCl("note"),
+    notePlaceholder: tCl("notePlaceholder"),
+    stage: t("stages"),
+    eventDate: tSt("eventDate"),
+    scheduledAt: tCi("scheduledAt"),
+    save: tc("save"),
+    saving: tc("loading"),
+    cancel: tc("cancel"),
+    errGeneric: tErr("generic"),
+  };
+
   const tabs = [
     {
-      id: "contacts",
-      label: `${t("contacts")} (${contactLogs.length})`,
+      id: "records",
+      label: `${tRec("title")} (${timeline.length})`,
       content: (
-        <ContactLogTab
-          leadId={id}
-          logs={contactLogs.map((l) => ({
-            id: l.id,
-            channel: l.channel,
-            result: l.result,
-            note: l.note,
-            logged_at: l.logged_at,
-            user_name: l.user_name ?? "—",
-          }))}
-          channels={CONTACT_CHANNELS.map((c) => ({ value: c, label: tCh(c) }))}
-          results={CONTACT_RESULTS.map((r) => ({ value: r, label: tCr(r) }))}
-          labels={contactLabels}
-        />
+        <div className="space-y-5">
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            {can(user.role, "leads.edit") && (
+              <>
+                <AddRecordMenu
+                  leadId={id}
+                  channels={CONTACT_CHANNELS.map((c) => ({ value: c, label: tCh(c) }))}
+                  results={CONTACT_RESULTS.map((r) => ({ value: r, label: tCr(r) }))}
+                  stages={STAGE_TYPES.map((st) => ({ value: st, label: tSt(st) }))}
+                  labels={addRecordLabels}
+                />
+                <DealTab
+                  leadId={id}
+                  deals={deals}
+                  plans={planOptions}
+                  campuses={campusOptions}
+                  canEditFinancials={can(user.role, "deals.edit_financials")}
+                  defaults={commDefaults}
+                  labels={dealLabels}
+                  triggerOnly
+                />
+              </>
+            )}
+          </div>
+          <RecordFeed
+            entries={timeline}
+            labels={recordLabels}
+            renderWhen={(at) =>
+              at.length <= 10 ? at : formatDateTime(at, locale)
+            }
+            describe={describe}
+          />
+        </div>
       ),
     },
     {
-      id: "stages",
-      label: `${t("stages")} (${stageEvents.length})`,
+      id: "notes",
+      label: `${tRec("notes")} (${leadNotes.length})`,
       content: (
-        <StageTab
+        <ConsultNotes
           leadId={id}
-          stages={stageEvents.map((s) => ({
-            id: s.id,
-            stage: s.stage,
-            event_date: s.event_date,
-            note: s.note,
-            created_at: s.event_date,
-            user_name: s.user_name ?? "—",
+          notes={leadNotes.map((n) => ({
+            id: n.id,
+            body: n.body,
+            created_at: n.created_at,
+            updated_at: n.updated_at,
+            user_name: n.user_name ?? null,
           }))}
-          stageTypes={STAGE_TYPES.map((s) => ({ value: s, label: tSt(s) }))}
-          labels={stageLabels}
-        />
-      ),
-    },
-    {
-      id: "invites",
-      label: `${t("invites")} (${consultInvites.length})`,
-      content: (
-        <ConsultInviteTab
-          leadId={id}
-          invites={consultInvites.map((inv) => ({
-            id: inv.id,
-            scheduled_at: inv.scheduled_at,
-            attendance: inv.attendance,
-            absent_reason: inv.absent_reason,
-            created_at: inv.invited_at,
-            inviter_name: inv.inviter_name ?? "—",
-          }))}
-          labels={inviteLabels}
-        />
-      ),
-    },
-    {
-      id: "deals",
-      label: `${t("deals")} (${deals.length})`,
-      content: (
-        <DealTab
-          leadId={id}
-          deals={deals}
-          plans={planOptions}
-          campuses={campusOptions}
-          canEditFinancials={can(user.role, "deals.edit_financials")}
-          defaults={commDefaults}
-          labels={dealLabels}
+          editableIds={leadNotes
+            .filter((n) => n.user_id === user.id || user.role === "admin")
+            .map((n) => n.id)}
+          labels={noteLabels}
         />
       ),
     },
@@ -367,64 +405,64 @@ export default async function LeadDetailPage({ params }: PageProps) {
             </div>
 
             {/* Contact info */}
-            <div className="grid gap-x-8 gap-y-1 text-sm sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-x-8 gap-y-4 text-base sm:grid-cols-2 lg:grid-cols-3">
               {lead.phone && (
                 <div>
-                  <span className="text-xs text-muted">{t("phone")}</span>
+                  <span className="block text-[0.8rem] text-muted">{t("phone")}</span>
                   <p>{lead.phone}</p>
                 </div>
               )}
               {lead.email && (
                 <div>
-                  <span className="text-xs text-muted">{t("email")}</span>
+                  <span className="block text-[0.8rem] text-muted">{t("email")}</span>
                   <p>{lead.email}</p>
                 </div>
               )}
               {lead.line_id && (
                 <div>
-                  <span className="text-xs text-muted">{t("lineId")}</span>
+                  <span className="block text-[0.8rem] text-muted">{t("lineId")}</span>
                   <p>{lead.line_id}</p>
                 </div>
               )}
               {lead.source_name && (
                 <div>
-                  <span className="text-xs text-muted">{t("source")}</span>
+                  <span className="block text-[0.8rem] text-muted">{t("source")}</span>
                   <p>{lead.source_name}{lead.sub_source ? ` / ${lead.sub_source}` : ""}</p>
                 </div>
               )}
               {lead.assistant_name && (
                 <div>
-                  <span className="text-xs text-muted">{t("assistant")}</span>
+                  <span className="block text-[0.8rem] text-muted">{t("assistant")}</span>
                   <p>{lead.assistant_name}</p>
                 </div>
               )}
               {lead.sales_name && (
                 <div>
-                  <span className="text-xs text-muted">{t("sales")}</span>
+                  <span className="block text-[0.8rem] text-muted">{t("sales")}</span>
                   <p>{lead.sales_name}</p>
                 </div>
               )}
               {lead.age_group && (
                 <div>
-                  <span className="text-xs text-muted">{t("ageGroup")}</span>
-                  <p>{tAg(lead.age_group as typeof AGE_GROUPS[number])}</p>
+                  <span className="block text-[0.8rem] text-muted">{t("ageGroup")}</span>
+                  <p>{optionLabel(tAg as (k: string) => string, AGE_GROUPS, lead.age_group)}</p>
                 </div>
               )}
               {lead.need && (
                 <div>
-                  <span className="text-xs text-muted">{t("need")}</span>
-                  <p>{tNeed(lead.need as typeof LEARNING_NEEDS[number])}</p>
+                  <span className="block text-[0.8rem] text-muted">{t("need")}</span>
+                  <p>{optionLabel(tNeed as (k: string) => string, LEARNING_NEEDS, lead.need)}</p>
                 </div>
               )}
               {lead.expected_depart && (
                 <div>
-                  <span className="text-xs text-muted">{t("expectedDepart")}</span>
+                  <span className="block text-[0.8rem] text-muted">{t("expectedDepart")}</span>
                   <p>{lead.expected_depart}</p>
                 </div>
               )}
               {lead.next_contact && (
                 <div>
-                  <span className="text-xs text-muted">{t("nextContact")}</span>
+                  <span className="block text-[0.8rem] text-muted">{t("nextContact")}</span>
                   <p>{lead.next_contact}</p>
                 </div>
               )}
@@ -432,14 +470,14 @@ export default async function LeadDetailPage({ params }: PageProps) {
 
             {lead.lead_note && (
               <div>
-                <span className="text-xs text-muted">{t("leadNote")}</span>
+                <span className="block text-[0.8rem] text-muted">{t("leadNote")}</span>
                 <p className="whitespace-pre-line text-sm">{lead.lead_note}</p>
               </div>
             )}
 
             {lead.note && (
               <div>
-                <span className="text-xs text-muted">{t("note")}</span>
+                <span className="block text-[0.8rem] text-muted">{t("note")}</span>
                 <p className="whitespace-pre-line text-sm">{lead.note}</p>
               </div>
             )}

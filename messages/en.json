@@ -429,5 +429,26 @@
     "manila": "Manila",
     "iloilo": "Iloilo",
     "bacolod": "Bacolod"
+  },
+  "Records": {
+    "title": "Record",
+    "notes": "Consultation notes",
+    "add": "Add record",
+    "empty": "Nothing recorded yet",
+    "kindStatus": "Status",
+    "kindStage": "Stage",
+    "kindContact": "Contact",
+    "kindInvite": "Consult invite",
+    "kindDeal": "Deal",
+    "kindEdit": "Details updated",
+    "statusChanged": "{from} → {to}",
+    "fieldsChanged": "Updated: {fields}",
+    "scheduledFor": "Scheduled {when}",
+    "pickType": "What are you recording?",
+    "noteAdd": "Add note",
+    "notePlaceholder": "Write a consultation note…",
+    "noteEmpty": "No consultation notes yet",
+    "noteSaved": "Saved",
+    "edited": "edited"
   }
 }

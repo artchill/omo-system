@@ -429,5 +429,26 @@
     "manila": "馬尼拉",
     "iloilo": "怡朗",
     "bacolod": "巴科洛德"
+  },
+  "Records": {
+    "title": "狀態紀錄",
+    "notes": "諮詢筆記",
+    "add": "新增紀錄",
+    "empty": "尚無紀錄",
+    "kindStatus": "狀態異動",
+    "kindStage": "階段紀錄",
+    "kindContact": "聯繫紀錄",
+    "kindInvite": "諮詢邀約",
+    "kindDeal": "成交紀錄",
+    "kindEdit": "資料異動",
+    "statusChanged": "{from} → {to}",
+    "fieldsChanged": "異動欄位：{fields}",
+    "scheduledFor": "預約 {when}",
+    "pickType": "要紀錄什麼？",
+    "noteAdd": "新增筆記",
+    "notePlaceholder": "寫下諮詢筆記…",
+    "noteEmpty": "尚無諮詢筆記",
+    "noteSaved": "已儲存",
+    "edited": "已編輯"
   }
 }

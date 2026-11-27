@@ -38,6 +38,11 @@ interface Props {
   canEditFinancials: boolean;
   defaults: { regFee: number; rateNormal: number; rateCamp: number; rateDay: number };
   labels: Record<string, string>;
+  /**
+   * Render only the + button, no heading and no list. 狀態紀錄 already shows
+   * deals in the feed; this keeps the registration form without repeating them.
+   */
+  triggerOnly?: boolean;
 }
 
 export function DealTab({
@@ -48,6 +53,7 @@ export function DealTab({
   canEditFinancials,
   defaults,
   labels,
+  triggerOnly,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState("");
@@ -73,25 +79,12 @@ export function DealTab({
   const fmt = (n: number | null) =>
     n != null ? n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "—";
 
-  return (
-    <div>
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-sm font-semibold">{labels.title}</h3>
-        <button className="btn btn-primary text-sm" onClick={() => setOpen(true)}>
-          + {labels.add}
-        </button>
-      </div>
-
-      {warning && (
-        <div className="mb-4 glass border-warn/30 bg-warn/10 p-3 text-sm text-warn">
-          ⚠ {warning}
-        </div>
-      )}
-
+  // Extracted so both the trigger-only and the full view can render it.
+  const dealModal = (
       <Modal open={open} onClose={() => setOpen(false)} title={labels.add}>
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && <p className="text-sm text-bad">{error}</p>}
-
+  
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block">
               <span className="mb-1 block text-xs text-muted">{labels.dealDate}</span>
@@ -110,7 +103,7 @@ export function DealTab({
               </select>
             </label>
           </div>
-
+  
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block">
               <span className="mb-1 block text-xs text-muted">{labels.plan}</span>
@@ -131,7 +124,7 @@ export function DealTab({
               </select>
             </label>
           </div>
-
+  
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block">
               <span className="mb-1 block text-xs text-muted">{labels.lodging}</span>
@@ -146,7 +139,7 @@ export function DealTab({
               <input name="weeks" type="number" min="1" className="field w-full" />
             </label>
           </div>
-
+  
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block">
               <span className="mb-1 block text-xs text-muted">{labels.departDate}</span>
@@ -157,7 +150,7 @@ export function DealTab({
               <input name="return_date" type="date" className="field w-full" />
             </label>
           </div>
-
+  
           {/* Financial fields */}
           <div className="border-t border-edge pt-4">
             <div className="grid gap-4 sm:grid-cols-2">
@@ -170,7 +163,7 @@ export function DealTab({
                 <input name="fx_rate" type="number" step="0.01" className="field w-full" />
               </label>
             </div>
-
+  
             {canEditFinancials && (
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <label className="block">
@@ -195,7 +188,7 @@ export function DealTab({
                 </label>
               </div>
             )}
-
+  
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <label className="block">
                 <span className="mb-1 block text-xs text-muted">{labels.paidCurrency}</span>
@@ -210,17 +203,17 @@ export function DealTab({
               </label>
             </div>
           </div>
-
+  
           <label className="block">
             <span className="mb-1 block text-xs text-muted">{labels.keyPoints}</span>
             <textarea name="key_points" rows={2} className="field w-full" />
           </label>
-
+  
           <label className="block">
             <span className="mb-1 block text-xs text-muted">{labels.note}</span>
             <textarea name="note" rows={2} className="field w-full" />
           </label>
-
+  
           <div className="flex justify-end gap-3 border-t border-edge pt-4">
             <button type="button" className="btn btn-ghost" onClick={() => setOpen(false)}>
               {labels.cancel}
@@ -231,6 +224,38 @@ export function DealTab({
           </div>
         </form>
       </Modal>
+  );
+
+  if (triggerOnly) {
+    return (
+      <>
+        <button className="btn" onClick={() => setOpen(true)}>
+          + {labels.add}
+        </button>
+        {warning && (
+          <span className="text-sm text-warn">⚠ {warning}</span>
+        )}
+        {dealModal}
+      </>
+    );
+  }
+
+  return (
+    <div>
+      <div className="mb-4 flex items-center justify-between">
+        <h3 className="text-sm font-semibold">{labels.title}</h3>
+        <button className="btn btn-primary text-sm" onClick={() => setOpen(true)}>
+          + {labels.add}
+        </button>
+      </div>
+
+      {warning && (
+        <div className="glass mb-4 border-warn/30 bg-warn/10 p-3 text-sm text-warn">
+          ⚠ {warning}
+        </div>
+      )}
+
+      {dealModal}
 
       {/* Deal list */}
       {deals.length === 0 ? (
