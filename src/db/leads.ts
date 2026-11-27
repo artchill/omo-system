@@ -40,6 +40,12 @@ export type LeadListRow = LeadRow & {
   sales_name: string | null;
   contact_count: number;
   latest_stage: string | null;
+  /** Most recent 聯繫紀錄, for the "i" hover on the list. */
+  latest_contact_at: string | null;
+  latest_contact_channel: string | null;
+  latest_contact_result: string | null;
+  latest_contact_note: string | null;
+  latest_contact_by: string | null;
 };
 
 const now = () => new Date().toISOString();
@@ -56,6 +62,9 @@ export type LeadListFilter = {
   salesId?: number;
   sourceId?: number;
   season?: string;
+  /** 進單時間 range, inclusive, as YYYY-MM-DD. */
+  entryFrom?: string;
+  entryTo?: string;
   search?: string;
   limit?: number;
   offset?: number;
@@ -88,6 +97,14 @@ export function listLeads(filter: LeadListFilter = {}): {
     where.push("l.season = ?");
     params.push(filter.season);
   }
+  if (filter.entryFrom) {
+    where.push("l.entry_date >= ?");
+    params.push(filter.entryFrom);
+  }
+  if (filter.entryTo) {
+    where.push("l.entry_date <= ?");
+    params.push(filter.entryTo);
+  }
   if (filter.search) {
     where.push(
       "(l.name LIKE ? OR l.phone LIKE ? OR l.email LIKE ? OR l.line_id LIKE ? OR l.lead_note LIKE ?)",
@@ -113,11 +130,21 @@ export function listLeads(filter: LeadListFilter = {}): {
               ua.name AS assistant_name,
               us.name AS sales_name,
               (SELECT COUNT(*) FROM contact_logs cl WHERE cl.lead_id = l.id) AS contact_count,
-              (SELECT se.stage FROM stage_events se WHERE se.lead_id = l.id ORDER BY se.event_date DESC LIMIT 1) AS latest_stage
+              (SELECT se.stage FROM stage_events se WHERE se.lead_id = l.id ORDER BY se.event_date DESC LIMIT 1) AS latest_stage,
+              lc.logged_at AS latest_contact_at,
+              lc.channel   AS latest_contact_channel,
+              lc.result    AS latest_contact_result,
+              lc.note      AS latest_contact_note,
+              ulc.name     AS latest_contact_by
        FROM leads l
        LEFT JOIN sources s  ON s.id  = l.source_id
        LEFT JOIN users   ua ON ua.id = l.assistant_id
        LEFT JOIN users   us ON us.id = l.sales_id
+       LEFT JOIN contact_logs lc
+              ON lc.id = (SELECT c2.id FROM contact_logs c2
+                           WHERE c2.lead_id = l.id
+                           ORDER BY c2.logged_at DESC, c2.id DESC LIMIT 1)
+       LEFT JOIN users ulc ON ulc.id = lc.user_id
        WHERE ${whereClause}
        ORDER BY l.updated_at DESC
        LIMIT ? OFFSET ?`,
@@ -135,11 +162,21 @@ export function findLeadById(id: number): LeadListRow | undefined {
               ua.name AS assistant_name,
               us.name AS sales_name,
               (SELECT COUNT(*) FROM contact_logs cl WHERE cl.lead_id = l.id) AS contact_count,
-              (SELECT se.stage FROM stage_events se WHERE se.lead_id = l.id ORDER BY se.event_date DESC LIMIT 1) AS latest_stage
+              (SELECT se.stage FROM stage_events se WHERE se.lead_id = l.id ORDER BY se.event_date DESC LIMIT 1) AS latest_stage,
+              lc.logged_at AS latest_contact_at,
+              lc.channel   AS latest_contact_channel,
+              lc.result    AS latest_contact_result,
+              lc.note      AS latest_contact_note,
+              ulc.name     AS latest_contact_by
        FROM leads l
        LEFT JOIN sources s  ON s.id  = l.source_id
        LEFT JOIN users   ua ON ua.id = l.assistant_id
        LEFT JOIN users   us ON us.id = l.sales_id
+       LEFT JOIN contact_logs lc
+              ON lc.id = (SELECT c2.id FROM contact_logs c2
+                           WHERE c2.lead_id = l.id
+                           ORDER BY c2.logged_at DESC, c2.id DESC LIMIT 1)
+       LEFT JOIN users ulc ON ulc.id = lc.user_id
        WHERE l.id = ?`,
     )
     .get(id) as LeadListRow | undefined;

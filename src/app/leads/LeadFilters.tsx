@@ -17,6 +17,8 @@ interface Props {
     source: string;
     assistant: string;
     season: string;
+    entryFrom: string;
+    entryTo: string;
     all: string;
     filter: string;
   };
@@ -56,7 +58,7 @@ export function LeadFilters({ statuses, sources, assistants, seasons, labels }: 
       />
 
       {/* Filter row */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid items-end gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {/* Status filter */}
         <select
           className="field w-full"
@@ -100,6 +102,30 @@ export function LeadFilters({ statuses, sources, assistants, seasons, labels }: 
             ))}
           </select>
         )}
+
+        {/* 進單時間 range */}
+        <label className="block">
+          <span className="mb-1 block text-[0.7rem] text-muted">
+            {labels.entryFrom}
+          </span>
+          <input
+            type="date"
+            className="field w-full"
+            value={searchParams.get("entryFrom") ?? ""}
+            onChange={(e) => update("entryFrom", e.target.value)}
+          />
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-[0.7rem] text-muted">
+            {labels.entryTo}
+          </span>
+          <input
+            type="date"
+            className="field w-full"
+            value={searchParams.get("entryTo") ?? ""}
+            onChange={(e) => update("entryTo", e.target.value)}
+          />
+        </label>
 
         {/* Season filter */}
         <select

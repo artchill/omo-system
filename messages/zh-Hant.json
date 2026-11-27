@@ -165,7 +165,13 @@
       "peak": "旺季",
       "off": "淡季"
     },
-    "subtitle": "共 {count} 筆名單"
+    "subtitle": "共 {count} 筆名單",
+    "entryTime": "進單時間",
+    "latestContact": "最新聯繫紀錄",
+    "noContactYet": "尚無聯繫紀錄",
+    "entryFrom": "進單起",
+    "entryTo": "進單迄",
+    "by": "紀錄人"
   },
   "ContactLog": {
     "add": "新增聯繫",

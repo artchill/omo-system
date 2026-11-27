@@ -1,11 +1,11 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { requirePermission } from "@/lib/auth";
 import { listLeads, type LeadListFilter } from "@/db/leads";
 import { listSources } from "@/db/sources";
 import { listUsers } from "@/db/users";
 import { LEAD_STATUSES, type LeadStatus } from "@/domain/lead-status";
-import { AGE_GROUPS, LEARNING_NEEDS, STUDENT_TYPES, CONTACT_CHANNELS, CONTACT_RESULTS, SEASONS } from "@/domain/enums";
+import { AGE_GROUPS, LEARNING_NEEDS, STUDENT_TYPES, CONTACT_CHANNELS, CONTACT_RESULTS, SEASONS, optionLabel } from "@/domain/enums";
 import { Shell } from "@/components/Header";
 import { Icon } from "@/components/Icon";
 import { LeadFilters } from "./LeadFilters";
@@ -14,6 +14,9 @@ import { StatusBadge } from "./StatusBadge";
 import { Pagination } from "./Pagination";
 import { QuickContactModal } from "./QuickContactModal";
 import { StopPropagation } from "./StopPropagation";
+import { ContactHint } from "./ContactHint";
+import { StageChip, isStage } from "./StageChip";
+import { formatDateTime, toISODate } from "@/lib/format";
 
 const PAGE_SIZE = 30;
 
@@ -34,6 +37,8 @@ export default async function LeadsPage({
   const qSource = parseInt(String(sp.source ?? ""), 10) || undefined;
   const qAssistant = parseInt(String(sp.assistant ?? ""), 10) || undefined;
   const qSeason = String(sp.season ?? "");
+  const qEntryFrom = String(sp.entryFrom ?? "");
+  const qEntryTo = String(sp.entryTo ?? "");
 
   const filter: LeadListFilter = {
     limit: PAGE_SIZE,
@@ -45,10 +50,12 @@ export default async function LeadsPage({
   if (qSource) filter.sourceId = qSource;
   if (qAssistant) filter.assistantId = qAssistant;
   if ((SEASONS as readonly string[]).includes(qSeason)) filter.season = qSeason;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(qEntryFrom)) filter.entryFrom = qEntryFrom;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(qEntryTo)) filter.entryTo = qEntryTo;
 
   const { rows, total } = listLeads(filter);
 
-  const [t, tc, ts, tAg, tNeed, tSt, tErr, tCh, tCr, tCl, tStage] = await Promise.all([
+  const [t, tc, ts, tAg, tNeed, tSt, tErr, tCh, tCr, tCl, tStage, locale] = await Promise.all([
     getTranslations("Leads"),
     getTranslations("Common"),
     getTranslations("LeadStatus"),
@@ -60,6 +67,7 @@ export default async function LeadsPage({
     getTranslations("ContactResult"),
     getTranslations("ContactLog"),
     getTranslations("Stage"),
+    getLocale(),
   ]);
 
   const sources = listSources(false).map((s) => ({
@@ -122,6 +130,8 @@ export default async function LeadsPage({
     source: t("source"),
     assistant: t("assistant"),
     season: t("season.label"),
+    entryFrom: t("entryFrom"),
+    entryTo: t("entryTo"),
     all: tc("all"),
     filter: tc("filter"),
   };
@@ -190,13 +200,15 @@ export default async function LeadsPage({
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-edge text-left text-xs font-medium uppercase tracking-wider text-muted">
-                <th className="whitespace-nowrap px-5 py-3.5">{t("name")}</th>
+                <th className="whitespace-nowrap px-5 py-3.5">{t("entryTime")}</th>
+                <th className="whitespace-nowrap px-4 py-3.5">{t("status")}</th>
+                <th className="whitespace-nowrap px-4 py-3.5">{t("stages")}</th>
+                <th className="whitespace-nowrap px-4 py-3.5">{t("name")}</th>
                 <th className="whitespace-nowrap px-4 py-3.5">{t("phone")}</th>
                 <th className="whitespace-nowrap px-4 py-3.5">{t("lineId")}</th>
                 <th className="whitespace-nowrap px-4 py-3.5">{t("email")}</th>
                 <th className="whitespace-nowrap px-4 py-3.5">{t("source")}</th>
-                <th className="whitespace-nowrap px-4 py-3.5">{t("status")}</th>
-                <th className="whitespace-nowrap px-4 py-3.5">{t("stages")}</th>
+                <th className="whitespace-nowrap px-4 py-3.5">{t("assistant")}</th>
                 <th className="whitespace-nowrap px-4 py-3.5">{t("leadNote")}</th>
                 <th className="whitespace-nowrap px-4 py-3.5">{t("contacts")}</th>
                 <th className="w-10 px-3 py-3.5"><span className="sr-only">Detail</span></th>
@@ -208,7 +220,38 @@ export default async function LeadsPage({
                   key={lead.id}
                   className="group transition-colors hover:bg-white/[0.03]"
                 >
-                  <td className="max-w-[14rem] px-5 py-3.5">
+                  <td className="whitespace-nowrap px-5 py-3.5 text-xs tabular-nums text-muted">
+                    {lead.entry_time
+                      ? `${lead.entry_date} ${lead.entry_time}`
+                      : toISODate(lead.entry_date, "—")}
+                  </td>
+                  <td className="px-4 py-3.5">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <StatusBadge status={lead.status} label={ts(lead.status)} />
+                      {lead.season && (
+                        <span
+                          className={`whitespace-nowrap rounded-md px-1.5 py-0.5 text-[0.7rem] ${
+                            lead.season === "peak"
+                              ? "bg-warn/15 text-warn"
+                              : "bg-white/[0.06] text-muted"
+                          }`}
+                        >
+                          {lead.season === "peak" ? t("season.peak") : t("season.off")}
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3.5">
+                    {isStage(lead.latest_stage) ? (
+                      <StageChip
+                        stage={lead.latest_stage}
+                        label={tStage(lead.latest_stage)}
+                      />
+                    ) : (
+                      <span className="text-xs text-muted">—</span>
+                    )}
+                  </td>
+                  <td className="max-w-[14rem] px-4 py-3.5">
                     <Link
                       href={`/leads/${lead.id}`}
                       className="block truncate font-medium text-foreground transition-colors group-hover:text-accent"
@@ -229,26 +272,8 @@ export default async function LeadsPage({
                   <td className="max-w-[10rem] truncate px-4 py-3.5 text-muted">
                     {lead.source_name ?? "—"}
                   </td>
-                  <td className="px-4 py-3.5">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <StatusBadge status={lead.status} label={ts(lead.status)} />
-                      {lead.season && (
-                        <span
-                          className={`whitespace-nowrap rounded-md px-1.5 py-0.5 text-[0.7rem] ${
-                            lead.season === "peak"
-                              ? "bg-warn/15 text-warn"
-                              : "bg-white/[0.06] text-muted"
-                          }`}
-                        >
-                          {lead.season === "peak" ? t("season.peak") : t("season.off")}
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3.5 text-xs text-muted">
-                    {lead.latest_stage
-                      ? tStage(lead.latest_stage as "valid" | "consult" | "invite_trial" | "trial")
-                      : "—"}
+                  <td className="max-w-[9rem] truncate px-4 py-3.5 text-muted">
+                    {lead.assistant_name ?? "—"}
                   </td>
                   <td className="max-w-[14rem] px-4 py-3.5 text-xs text-muted">
                     {lead.lead_note ? (
@@ -262,6 +287,17 @@ export default async function LeadsPage({
                   <td className="px-4 py-3.5">
                     <div className="flex items-center gap-1.5">
                       <span className="tabular-nums text-muted">{lead.contact_count}</span>
+                      <ContactHint
+                        title={t("latestContact")}
+                        emptyLabel={t("noContactYet")}
+                        rows={[
+                          { label: tCl("loggedTime"), value: formatDateTime(lead.latest_contact_at, locale, "") },
+                          { label: tCl("channel"), value: optionLabel(tCh as (k: string) => string, CONTACT_CHANNELS, lead.latest_contact_channel, "") },
+                          { label: tCl("result"), value: optionLabel(tCr as (k: string) => string, CONTACT_RESULTS, lead.latest_contact_result, "") },
+                          { label: t("by"), value: lead.latest_contact_by ?? "" },
+                          { label: tCl("note"), value: lead.latest_contact_note ?? "" },
+                        ]}
+                      />
                       <QuickContactModal
                         leadId={lead.id}
                         leadName={lead.name}
@@ -302,11 +338,18 @@ export default async function LeadsPage({
             className="glass group block transition-all hover:ring-1 hover:ring-accent/30"
           >
             <div className="p-4">
-              {/* Row 1: Name + Status */}
+              {/* Row 1: 進單時間, name, status */}
               <div className="mb-3 flex items-start justify-between gap-3">
-                <h3 className="min-w-0 text-[0.95rem] font-semibold leading-snug text-foreground transition-colors group-hover:text-accent">
-                  {lead.name}
-                </h3>
+                <div className="min-w-0">
+                  <p className="mb-0.5 text-[0.7rem] tabular-nums text-muted">
+                    {lead.entry_time
+                      ? `${lead.entry_date} ${lead.entry_time}`
+                      : toISODate(lead.entry_date, "—")}
+                  </p>
+                  <h3 className="min-w-0 text-[0.95rem] font-semibold leading-snug text-foreground transition-colors group-hover:text-accent">
+                    {lead.name}
+                  </h3>
+                </div>
                 <StatusBadge status={lead.status} label={ts(lead.status)} />
               </div>
 
@@ -362,9 +405,12 @@ export default async function LeadsPage({
                     {lead.season === "peak" ? t("season.peak") : t("season.off")}
                   </span>
                 )}
-                {lead.latest_stage && (
-                  <span className="rounded-md bg-accent/10 px-2 py-0.5 text-blue-300">
-                    {tStage(lead.latest_stage as "valid" | "consult" | "invite_trial" | "trial")}
+                {isStage(lead.latest_stage) && (
+                  <StageChip stage={lead.latest_stage} label={tStage(lead.latest_stage)} />
+                )}
+                {lead.assistant_name && (
+                  <span className="rounded-md bg-white/[0.06] px-2 py-0.5 text-muted">
+                    {t("assistant")}: {lead.assistant_name}
                   </span>
                 )}
                 <span className="ml-auto flex items-center gap-1.5 text-muted">
@@ -373,6 +419,19 @@ export default async function LeadsPage({
                     <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767A2 2 0 009.828 17h2.344l2.828 2.828V17h1a2 2 0 002-2v-4a2 2 0 00-2-2h-1z" />
                   </svg>
                   <span className="tabular-nums">{lead.contact_count}</span>
+                  <StopPropagation>
+                    <ContactHint
+                      title={t("latestContact")}
+                      emptyLabel={t("noContactYet")}
+                      rows={[
+                        { label: tCl("loggedTime"), value: formatDateTime(lead.latest_contact_at, locale, "") },
+                        { label: tCl("channel"), value: optionLabel(tCh as (k: string) => string, CONTACT_CHANNELS, lead.latest_contact_channel, "") },
+                        { label: tCl("result"), value: optionLabel(tCr as (k: string) => string, CONTACT_RESULTS, lead.latest_contact_result, "") },
+                        { label: t("by"), value: lead.latest_contact_by ?? "" },
+                        { label: tCl("note"), value: lead.latest_contact_note ?? "" },
+                      ]}
+                    />
+                  </StopPropagation>
                   <StopPropagation>
                     <QuickContactModal
                       leadId={lead.id}

@@ -165,7 +165,13 @@
       "peak": "Peak season",
       "off": "Off season"
     },
-    "subtitle": "{count} leads total"
+    "subtitle": "{count} leads total",
+    "entryTime": "Received",
+    "latestContact": "Latest contact",
+    "noContactYet": "No contact logged yet",
+    "entryFrom": "Received from",
+    "entryTo": "Received to",
+    "by": "By"
   },
   "ContactLog": {
     "add": "Add contact",
